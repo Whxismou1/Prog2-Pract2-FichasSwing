@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+
+<project name="ATMManager" basedir="." default="todo"
+    xmlns:jacoco="antlib:org.jacoco.ant">
+    <property name="src" value="src"/>
+    <property name="lib" value="lib"/>
+    <property name="classes" value="bin"/>
+    <property name="log" value="log"/>
+    <property name="doc" value="doc"/>
+    <property name="conf" value="etc"/>
+
+    <property name="package" value="swingfichas"/>
+
+    <property name="title" value="Swing Fichas Iguales"/>
+
+    <!-- Coverage -->
+    <property name="coverage.result.dir" location="./coverage_report" />
+    <property name="coverage.result.report.dir" location="${coverage.result.dir}/site/jacoco" />
+    <property name="coverage.result.exec.file" location="${coverage.result.dir}/jacoco.exec" />
+
+    <!-- Jacoco Configuration -->
+    <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+        <classpath path="./lib/jacocoant.jar" />
+    </taskdef>
+
+    <target name="clean">
+        <delete dir="${classes}"/>
+        <delete dir="${doc}"/>
+        <delete dir="${dist}"/>
+        <delete file="${conf}/log.txt"/>
+        <delete dir="${log}"/>
+        <delete dir="${coverage.result.dir}" />
+    </target>
+
+    <target name="document">
+        <mkdir dir="${doc}"/>
+        <javadoc sourcepath="${src}" classpath="${lib}" packagenames="${package}" destdir="${doc}" verbose="true" author="true" access="private" splitindex="true" version="true" windowtitle="${title}" doctitle="${titutitleo}"/>
+    </target>
+
+    <target name="compile" depends="clean">
+        <mkdir dir="${classes}"/>
+        <mkdir dir="${conf}"/>
+        <javac srcdir="${src}" destdir="${classes}" classpath="${lib}" verbose="true" debug="true"/>
+        <echo message="Compilation done" file="${conf}/log.txt"/>
+    </target>
+
+
+    <target name="run" depends="compile">
+        <java classname="swingfichas.MainApp">
+            <classpath>
+                <pathelement path="${classes}"/>
+                <pathelement path="${lib}"/>
+            </classpath>
+        </java>
+    </target>
+
+    <target name="debug">
+        <echo message="Java Version: ${ant.java.version}" />
+        <echo message="Java Home: ${java.home}" />
+        <echo message="Classpath: ${java.class.path}" />
+    </target>
+
+
+
+    <target name="todo" depends=" run"/>
+
+</project>
