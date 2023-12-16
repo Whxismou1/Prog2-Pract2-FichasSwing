@@ -1,5 +1,7 @@
 package swingfichas;
 
+import java.awt.LayoutManager;
+
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -15,15 +17,18 @@ public class SwingInitial {
     SwingInitial() {
 
         initializeCcomponents();
-        // addEventListeners2Components();
-        // addComponents2Panel();
-        // addComponents2Frame();
+        addEventListeners2Components();
+        addComponents2Panel();
+        addComponents2Frame();
     }
 
     private void initializeCcomponents() {
         mainWindowMenu = new JFrame("Swing Fichas Iguales");
         mainPanelMenu = new JPanel();
-        mainPanelMenu.setLayout(new BoxLayout(mainPanelMenu, BoxLayout.Y_AXIS));
+        mainPanelMenu.setAlignmentX(0.5f);
+
+        //como centro el panel en el frame?
+        //mainPanelMenu.setAlignmentX(0.5f);
 
     }
 
@@ -32,9 +37,9 @@ public class SwingInitial {
     }
 
     private void addComponents2Panel() {
-        addButtonToPanel("Crear juego");
-        addButtonToPanel("Exportar juego");
-        addButtonToPanel("Guardar");
+        addButtonToPanel("CREATE GAME");
+        addButtonToPanel("PLAY GAME");
+        addButtonToPanel("EXIT");
     }
 
     private void addButtonToPanel(String buttonText) {
@@ -44,12 +49,13 @@ public class SwingInitial {
     }
 
     private void addComponents2Frame() {
+
         mainWindowMenu.add(mainPanelMenu);
     }
 
     protected void show() {
         mainWindowMenu.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mainWindowMenu.setSize(1000, 1000);
+        mainWindowMenu.setSize(500, 500);
         mainWindowMenu.setLocationRelativeTo(null);
         mainWindowMenu.setVisible(true);
     }
