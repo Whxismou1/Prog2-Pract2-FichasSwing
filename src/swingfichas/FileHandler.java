@@ -1,3 +1,7 @@
+/***
+ * Clase encargada de guardar y importar los tableros
+ */
+
 package swingfichas;
 
 import java.io.BufferedReader;
@@ -7,10 +11,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class FileHandler {
 
@@ -21,6 +23,11 @@ public class FileHandler {
 
     }
 
+    /**
+     * Metodo encargado de guardar el tablero en un archivo
+     * 
+     * @param currentBoard -> tablero actual
+     */
     protected void saveToFile(char[][] currentBoard) {
         int userSelection = fileChooser.showSaveDialog(null);
 
@@ -42,6 +49,9 @@ public class FileHandler {
         }
     }
 
+    /**
+     * Metodo encargado de importar el tablero desde un archivo
+     */
     protected char[][] loadGame() {
         fileChooser.setDialogTitle("Load game");
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -57,6 +67,12 @@ public class FileHandler {
 
     }
 
+    /**
+     * Metodo encargado de leer el archivo y cargar el tablero
+     * 
+     * @param fileSelected -> archivo seleccionado
+     * @return -> tablero cargado
+     */
     private char[][] getBoardFromFile(File fileSelected) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(fileSelected));
@@ -100,7 +116,5 @@ public class FileHandler {
     protected void saveGameSolution() {
 
     }
-
-
 
 }

@@ -1,3 +1,7 @@
+/**
+ * Clase principal encargada del juego
+ */
+
 package swingfichas;
 
 import java.awt.BorderLayout;
@@ -123,6 +127,9 @@ public class SwingInitial implements ActionListener {
 
     }
 
+    /**
+     * Metodo encargado de agregar los botones al menu principal
+     */
     private void addButtonsMainMenu2Arr() {
         mainPanelMenu.add(Box.createRigidArea(new Dimension(0, 30)));
         mainPanelMenu.add(titleGame);
@@ -141,6 +148,9 @@ public class SwingInitial implements ActionListener {
         mainPanelMenu.add(button);
     }
 
+    /**
+     * Metodo encargado de agregar los eventos a ciertos componentes
+     */
     private void addEventListeners2Components() {
         rowSelector.addChangeListener(e -> updateGameBoard());
         colSelector.addChangeListener(e -> updateGameBoard());
@@ -166,6 +176,9 @@ public class SwingInitial implements ActionListener {
 
         });
 
+        /**
+         * Da problemas
+         */
         importGameC.addActionListener(e -> {
             board = fileHandler.loadGame();
             if (isValidBoard(board)) {
@@ -196,6 +209,22 @@ public class SwingInitial implements ActionListener {
             createGameButton.doClick();
         });
 
+        /**
+         * Da problemas
+         */
+        importGameP.addActionListener(e -> {
+            board = fileHandler.loadGame();
+            if (isValidBoard(board)) {
+                int nf = board.length;
+                int nc = board[0].length;
+
+                createPlayBoard(nf, nc);
+                JOptionPane.showMessageDialog(null, "Game loaded successfully!");
+            } else {
+                JOptionPane.showMessageDialog(null, "Invalid game file!");
+            }
+        });
+
     }
 
     private void printMatrix(char[][] matrix) {
@@ -207,6 +236,11 @@ public class SwingInitial implements ActionListener {
         }
     }
 
+    /**
+     * Metodo encargado de obtener el tablero actual
+     * 
+     * @return tablero actual
+     */
     private char[][] getBoard() {
         char[][] board = new char[boardPiecesButtons.length][boardPiecesButtons[0].length];
 
@@ -228,6 +262,12 @@ public class SwingInitial implements ActionListener {
         return board;
     }
 
+    /**
+     * Metodo encargado de verificar si el tablero es valido
+     * 
+     * @param board -> tablero a verificar
+     * @return true si es valido, false de lo contrario
+     */
     private boolean isValidBoard(char[][] board) {
         if (board == null) {
             return false;
@@ -252,6 +292,12 @@ public class SwingInitial implements ActionListener {
         mainWindowMenu.add(mainPanelMenu);
     }
 
+    /**
+     * Metodo encargado de crear el tablero de juego
+     * 
+     * @param numRows -> numero de filas
+     * @param numCols -> numero de columnas
+     */
     private void createGameBoard(int numRows, int numCols) {
         boardPiecesButtons = new JButton[numRows][numCols];
         board = new char[numRows][numCols];
@@ -285,6 +331,11 @@ public class SwingInitial implements ActionListener {
         frameGameCreation.add(panelGameCreation);
     }
 
+    /**
+     * Metodo encargado de crear los botones de las fichas en el modo creacion
+     * 
+     * @return boton de ficha
+     */
     private JButton createBoardPieceButton() {
         JButton boardPiece = new JButton();
         boardPiece.setPreferredSize(new Dimension(50, 50));
@@ -292,6 +343,11 @@ public class SwingInitial implements ActionListener {
         return boardPiece;
     }
 
+    /**
+     * Metodo encargado de crear los botones de las fichas en el modo juego
+     * 
+     * @return boton de ficha
+     */
     private JButton createBoardPieceButtonPlay() {
         JButton boardPiece = new JButton();
         boardPiece.setPreferredSize(new Dimension(50, 50));
@@ -299,10 +355,22 @@ public class SwingInitial implements ActionListener {
         return boardPiece;
     }
 
+    /**
+     * Metodo encargado de manejar el evento de click en un boton de ficha en el
+     * modo juego
+     * 
+     * @param boardPiece -> boton de ficha
+     */
     private void handleBoardPieceButtonClickPlay(JButton boardPiece) {
 
     }
 
+    /**
+     * Metodo encargado de manejar el evento de click en un boton de ficha en el
+     * modo creacion
+     * 
+     * @param boardPiece -> boton de ficha
+     */
     private void handleBoardPieceButtonClick(JButton boardPiece) {
         String[] options = { "R", "V", "A" };
         int choice = JOptionPane.showOptionDialog(
@@ -321,6 +389,12 @@ public class SwingInitial implements ActionListener {
         }
     }
 
+    /**
+     * Metodo encargado de actualizar la imagen de la ficha
+     * 
+     * @param boardPiece -> boton de ficha
+     * @param piece      -> ficha
+     */
     private void updatePieceImage(JButton boardPiece, String piece) {
         try {
             ImageIcon icon;
@@ -354,6 +428,9 @@ public class SwingInitial implements ActionListener {
         }
     }
 
+    /**
+     * Metodo encargado de actualizar el tablero de juego
+     */
     private void updateGameBoard() {
         int numRows = (int) rowSelector.getValue();
         int numCols = (int) colSelector.getValue();
@@ -368,6 +445,9 @@ public class SwingInitial implements ActionListener {
         frameGameCreation.repaint();
     }
 
+    /**
+     * Metodo encargado de mostrar la ventana principal
+     */
     protected void show() {
         mainWindowMenu.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainWindowMenu.setSize(500, 500);
@@ -408,10 +488,12 @@ public class SwingInitial implements ActionListener {
 
         } else if (actionActivated.getSource() == playGameButton) {
             createPlay();
-            printMatrix(board);
         }
     }
 
+    /**
+     * Metodo encargado de crear la ventana del menu juego
+     */
     private void createPlay() {
         deactivateButton(playGameButton);
         frameGamePlay = new JFrame("Play Game");
@@ -440,6 +522,12 @@ public class SwingInitial implements ActionListener {
 
     }
 
+    /**
+     * Metodo encargado de crear el tablero de juego en el modo juego
+     * 
+     * @param numF   -> numero de filas
+     * @param numCol -> numero de columnas
+     */
     private void createPlayBoard(int numF, int numCol) {
 
         panelGamePlay.setLayout(new BorderLayout());
@@ -461,11 +549,11 @@ public class SwingInitial implements ActionListener {
                 for (int j = 0; j < numCol; j++) {
                     JButton boardPiece = createBoardPieceButtonPlay();
 
-                    boardPiece.setText(String.valueOf(board[i][j]));
+                    boardPiece.setText(String.valueOf(board[i][j]).trim());
 
-                    updatePieceImage(boardPiece, String.valueOf(board[i][j]));
+                    updatePieceImage(boardPiece, String.valueOf(board[i][j]).trim());
 
-                    boardPiecesButtons[i][j] = boardPiece;
+                    boardPiecesButtonsP[i][j] = boardPiece;
                     boardPanel.add(boardPiece);
                 }
             }
@@ -476,10 +564,20 @@ public class SwingInitial implements ActionListener {
 
     }
 
+    /**
+     * Metodo encargado de activar un boton
+     * 
+     * @param button2activate -> boton a activar
+     */
     private void activateButton(JButton button2activate) {
         button2activate.setEnabled(true);
     }
 
+    /**
+     * Metodo encargado de desactivar un boton
+     * 
+     * @param button2deactivate -> boton a desactivar
+     */
     private void deactivateButton(JButton button2deactivate) {
         button2deactivate.setEnabled(false);
     }

@@ -1,3 +1,7 @@
+/***
+ * Clase Main enncargada de ejecutar el programa
+ */
+
 package swingfichas;
 
 import javax.swing.SwingUtilities;
