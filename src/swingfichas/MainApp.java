@@ -8,8 +8,7 @@ public class MainApp {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                SwingInitial swingInit = new SwingInitial();
-                swingInit.show();
+                new SwingInitial().show();
             }
 
         });

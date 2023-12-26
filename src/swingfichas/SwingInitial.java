@@ -1,14 +1,30 @@
 package swingfichas;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFormattedTextField;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 
 public class SwingInitial implements ActionListener {
+    private FileHandler fileHandler;
+
+    /* Elementos del menu principal */
     private JFrame mainWindowMenu;
     private JPanel mainPanelMenu;
     private JButton createGameButton;
@@ -19,23 +35,45 @@ public class SwingInitial implements ActionListener {
     private Image imageMenuScaled;
     private ImageIcon iconMenuScaled;
     private JLabel imageMenu;
-
+    /* Elementos del menu Creacion de juego */
     private JFrame frameGameCreation;
     private JPanel panelGameCreation;
-    private JButton[][] buttons;
+    private JButton[][] boardPiecesButtons;
     private int DEFAULT_ROWS = 3;
     private int DEFAULT_COLS = 3;
     private JSpinner rowSelector;
     private JSpinner colSelector;
     private JButton saveFile;
+    private JButton playButton;
+    private JButton undoButtonC;
+    private JButton redoButtonC;
+    private JButton importGameC;
     private char[][] board;
 
+    /* Elementos del menu Jugar */
+    private JFrame frameGamePlay;
+    private JPanel panelGamePlay;
+
+    private JButton playButtonP;
+    private JButton importGameP;
+    private JButton createGameP;
+    private JButton solveButton;
+    private JButton saveSolutionButton;
+    private JButton undoButtonP;
+    private JButton redoButtonP;
+    private JButton[][] boardPiecesButtonsP;
+
     SwingInitial() {
+        initializeClasses();
         initializeComponents();
         addButtonsMainMenu2Arr();
         addComponents2Panel();
         addEventListeners2Components();
         addComponents2Frame();
+    }
+
+    private void initializeClasses() {
+        fileHandler = new FileHandler();
     }
 
     private void initializeComponents() {
@@ -68,6 +106,20 @@ public class SwingInitial implements ActionListener {
         colEditor.setEditable(false);
 
         saveFile = new JButton("SAVE");
+        playButton = new JButton("PLAY");
+        undoButtonC = new JButton("<-");
+        redoButtonC = new JButton("->");
+        importGameC = new JButton("IMPORT GAME");
+
+        panelGamePlay = new JPanel();
+
+        playButtonP = new JButton("PLAY");
+        importGameP = new JButton("IMPORT GAME");
+        createGameP = new JButton("CREATE GAME");
+        solveButton = new JButton("SOLVE");
+        saveSolutionButton = new JButton("SAVE SOLUTION");
+        undoButtonP = new JButton("<-");
+        redoButtonP = new JButton("->");
 
     }
 
@@ -96,32 +148,54 @@ public class SwingInitial implements ActionListener {
             board = getBoard();
 
             if (isValidBoard(board)) {
-                saveToFile(board);
+                fileHandler.saveToFile(board);
             }
 
         });
-    }
 
-    private void saveToFile(char[][] currentBoard) {
-        JFileChooser fileChooser = new JFileChooser();
-        int userSelection = fileChooser.showSaveDialog(null);
+        playButton.addActionListener(e -> {
+            board = getBoard();
 
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            try (PrintWriter writer = new PrintWriter(new FileWriter(fileChooser.getSelectedFile()))) {
-                for (int i = 0; i < board.length; i++) {
-                    for (int j = 0; j < board[0].length; j++) {
-                        writer.print(board[i][j]);
-                    }
-                    writer.println();
-                }
-                JOptionPane.showMessageDialog(null, "Board saved to " + fileChooser.getSelectedFile());
-            } catch (IOException e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Error saving board to file: " + e.getMessage());
+            if (isValidBoard(board)) {
+                frameGameCreation.dispose();
+                activateButton(createGameButton);
+                createPlay();
+            } else {
+                JOptionPane.showMessageDialog(null, "Invalid board!");
             }
-        } else {
-            JOptionPane.showMessageDialog(null, "Save canceled by user.");
-        }
+
+        });
+
+        importGameC.addActionListener(e -> {
+            board = fileHandler.loadGame();
+            if (isValidBoard(board)) {
+                printMatrix(board);
+                int numF = board.length;
+                int numCol = board[0].length;
+
+                rowSelector.setValue(numF);
+                colSelector.setValue(numCol);
+                updateGameBoard();
+                for (int i = 0; i < numF; i++) {
+                    for (int j = 0; j < numCol; j++) {
+                        String piece = String.valueOf(board[i][j]).trim();
+                        updatePieceImage(boardPiecesButtons[i][j], piece);
+                        boardPiecesButtons[i][j].setText(piece);
+                    }
+                }
+                JOptionPane.showMessageDialog(null, "Game loaded successfully!");
+            } else {
+                JOptionPane.showMessageDialog(null, "Invalid game file!");
+            }
+
+        });
+
+        createGameP.addActionListener(e -> {
+            frameGamePlay.dispose();
+            activateButton(playGameButton);
+            createGameButton.doClick();
+        });
+
     }
 
     private void printMatrix(char[][] matrix) {
@@ -134,11 +208,11 @@ public class SwingInitial implements ActionListener {
     }
 
     private char[][] getBoard() {
-        char[][] board = new char[buttons.length][buttons[0].length];
+        char[][] board = new char[boardPiecesButtons.length][boardPiecesButtons[0].length];
 
-        for (int i = 0; i < buttons.length; i++) {
-            for (int j = 0; j < buttons[0].length; j++) {
-                String text = buttons[i][j].getText();
+        for (int i = 0; i < boardPiecesButtons.length; i++) {
+            for (int j = 0; j < boardPiecesButtons[0].length; j++) {
+                String text = boardPiecesButtons[i][j].getText();
                 if (text.equals("R")) {
                     board[i][j] = 'R';
                 } else if (text.equals("V")) {
@@ -155,6 +229,9 @@ public class SwingInitial implements ActionListener {
     }
 
     private boolean isValidBoard(char[][] board) {
+        if (board == null) {
+            return false;
+        }
 
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[0].length; j++) {
@@ -176,7 +253,7 @@ public class SwingInitial implements ActionListener {
     }
 
     private void createGameBoard(int numRows, int numCols) {
-        buttons = new JButton[numRows][numCols];
+        boardPiecesButtons = new JButton[numRows][numCols];
         board = new char[numRows][numCols];
         panelGameCreation.setLayout(new BorderLayout());
 
@@ -187,6 +264,10 @@ public class SwingInitial implements ActionListener {
         selectorsPanel.add(new JLabel("Cols:"));
         selectorsPanel.add(colSelector);
         selectorsPanel.add(saveFile);
+        selectorsPanel.add(playButton);
+        selectorsPanel.add(undoButtonC);
+        selectorsPanel.add(redoButtonC);
+        selectorsPanel.add(importGameC);
         panelGameCreation.add(selectorsPanel, BorderLayout.NORTH);
 
         JPanel boardPanel = new JPanel();
@@ -194,36 +275,83 @@ public class SwingInitial implements ActionListener {
 
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numCols; j++) {
-                JButton button = new JButton();
-                button.setPreferredSize(new Dimension(50, 50));
-                button.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        // Lógica para permitir que el usuario elija la pieza (R, V, A)
-                        String[] options = { "R", "V", "A" };
-                        int choice = JOptionPane.showOptionDialog(
-                                null,
-                                "Choose a piece:",
-                                "Piece Selection",
-                                JOptionPane.DEFAULT_OPTION,
-                                JOptionPane.QUESTION_MESSAGE,
-                                null,
-                                options,
-                                options[0]);
-
-                        if (choice != -1) {
-                            button.setText(options[choice]);
-                        }
-                    }
-                });
-                buttons[i][j] = button;
-                boardPanel.add(button);
+                JButton boardPiece = createBoardPieceButton();
+                boardPiecesButtons[i][j] = boardPiece;
+                boardPanel.add(boardPiece);
             }
         }
 
         panelGameCreation.add(boardPanel, BorderLayout.CENTER);
         frameGameCreation.add(panelGameCreation);
+    }
 
+    private JButton createBoardPieceButton() {
+        JButton boardPiece = new JButton();
+        boardPiece.setPreferredSize(new Dimension(50, 50));
+        boardPiece.addActionListener(e -> handleBoardPieceButtonClick(boardPiece));
+        return boardPiece;
+    }
+
+    private JButton createBoardPieceButtonPlay() {
+        JButton boardPiece = new JButton();
+        boardPiece.setPreferredSize(new Dimension(50, 50));
+        boardPiece.addActionListener(e -> handleBoardPieceButtonClickPlay(boardPiece));
+        return boardPiece;
+    }
+
+    private void handleBoardPieceButtonClickPlay(JButton boardPiece) {
+
+    }
+
+    private void handleBoardPieceButtonClick(JButton boardPiece) {
+        String[] options = { "R", "V", "A" };
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                "Choose a piece:",
+                "Piece Selection",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (choice != -1) {
+            updatePieceImage(boardPiece, options[choice]);
+            boardPiece.setText(options[choice]);
+        }
+    }
+
+    private void updatePieceImage(JButton boardPiece, String piece) {
+        try {
+            ImageIcon icon;
+            Image image;
+
+            boardPiece.setText("");
+            boardPiece.setIcon(null);
+
+            switch (piece) {
+                case "R":
+                    icon = new ImageIcon("etc/images/fichaRoja.png");
+                    image = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+                    boardPiece.setIcon(new ImageIcon(image));
+                    break;
+                case "V":
+                    icon = new ImageIcon("etc/images/fichaVerde.png");
+                    image = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+                    boardPiece.setIcon(new ImageIcon(image));
+                    break;
+                case "A":
+                    icon = new ImageIcon("etc/images/fichaAzul.png");
+                    image = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+                    boardPiece.setIcon(new ImageIcon(image));
+                    break;
+                default:
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error loading images: " + e.getMessage());
+        }
     }
 
     private void updateGameBoard() {
@@ -234,13 +362,8 @@ public class SwingInitial implements ActionListener {
 
         panelGameCreation.removeAll();
 
-        // Crear un nuevo tablero con las dimensiones actualizadas
         createGameBoard(numRows, numCols);
 
-        // Agregar el nuevo panel de juego al marco
-        frameGameCreation.add(panelGameCreation);
-
-        // Revalidar y repintar el marco
         frameGameCreation.revalidate();
         frameGameCreation.repaint();
     }
@@ -263,18 +386,101 @@ public class SwingInitial implements ActionListener {
                 System.exit(0);
             }
         } else if (actionActivated.getSource() == createGameButton) {
+            deactivateButton(createGameButton);
             frameGameCreation = new JFrame("Create Game");
-            frameGameCreation.setSize(500, 500);
+            frameGameCreation.setSize(610, 610);
             frameGameCreation.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frameGameCreation.setLocationRelativeTo(null);
             frameGameCreation.setResizable(false);
 
-            // Create game board panel
             createGameBoard(DEFAULT_ROWS, DEFAULT_COLS);
+            frameGameCreation.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    // Llamado cuando se cierra la ventana de juego
+                    activateButton(createGameButton); // Vuelve a activar el botón al cerrar
+                    rowSelector.setValue(DEFAULT_ROWS);
+                    colSelector.setValue(DEFAULT_COLS);
+                }
+            });
 
             frameGameCreation.setVisible(true);
-        } else if (actionActivated.getSource() == playGameButton) {
 
+        } else if (actionActivated.getSource() == playGameButton) {
+            createPlay();
+            printMatrix(board);
         }
+    }
+
+    private void createPlay() {
+        deactivateButton(playGameButton);
+        frameGamePlay = new JFrame("Play Game");
+        frameGamePlay.setSize(610, 610);
+        frameGamePlay.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frameGamePlay.setLocationRelativeTo(null);
+        frameGamePlay.setResizable(false);
+
+        if (board == null) {
+            boardPiecesButtonsP = new JButton[DEFAULT_ROWS][DEFAULT_COLS];
+            createPlayBoard(DEFAULT_ROWS, DEFAULT_COLS);
+        } else {
+            boardPiecesButtonsP = new JButton[board.length][board[0].length];
+            createPlayBoard(board.length, board[0].length);
+        }
+
+        frameGamePlay.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // Llamado cuando se cierra la ventana de juego
+                activateButton(playGameButton); // Vuelve a activar el botón al cerrar
+            }
+        });
+
+        frameGamePlay.setVisible(true);
+
+    }
+
+    private void createPlayBoard(int numF, int numCol) {
+
+        panelGamePlay.setLayout(new BorderLayout());
+        JPanel toolPanel = new JPanel();
+        toolPanel.add(playButtonP);
+        toolPanel.add(undoButtonP);
+        toolPanel.add(redoButtonP);
+        toolPanel.add(importGameP);
+        toolPanel.add(createGameP);
+        toolPanel.add(solveButton);
+        toolPanel.add(saveSolutionButton);
+        panelGamePlay.add(toolPanel, BorderLayout.NORTH);
+        frameGamePlay.add(panelGamePlay);
+
+        JPanel boardPanel = new JPanel();
+        boardPanel.setLayout(new GridLayout(numF, numCol));
+        if (board != null) {
+            for (int i = 0; i < numF; i++) {
+                for (int j = 0; j < numCol; j++) {
+                    JButton boardPiece = createBoardPieceButtonPlay();
+
+                    boardPiece.setText(String.valueOf(board[i][j]));
+
+                    updatePieceImage(boardPiece, String.valueOf(board[i][j]));
+
+                    boardPiecesButtons[i][j] = boardPiece;
+                    boardPanel.add(boardPiece);
+                }
+            }
+        }
+
+        panelGamePlay.add(boardPanel, BorderLayout.CENTER);
+        frameGamePlay.add(panelGamePlay);
+
+    }
+
+    private void activateButton(JButton button2activate) {
+        button2activate.setEnabled(true);
+    }
+
+    private void deactivateButton(JButton button2deactivate) {
+        button2deactivate.setEnabled(false);
     }
 }
