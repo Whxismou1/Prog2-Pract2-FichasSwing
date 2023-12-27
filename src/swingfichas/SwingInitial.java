@@ -4,9 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Image;
-import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -18,11 +18,19 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeListener;
 
 public class SwingInitial {
 
     private FileHandler fileHandler;
     private SolverHelper solverHelper;
+
+    private final int DEFAULT_ROWS = 3;
+    private final int DEFAULT_COLS = 3;
+
+    private int numFilas;
+    private int numColumnas;
+
     // Main menu
     private JFrame mainFrame;
     private JPanel mainPanel;
@@ -39,18 +47,31 @@ public class SwingInitial {
     private JFrame createGameFrame;
     private JPanel createGamePanel;
     private JButton[][] boardPiecesButtons;
-    private final int DEFAULT_ROWS = 3;
-    private final int DEFAULT_COLS = 3;
+
     private JSpinner rowSelector;
     private JSpinner colSelector;
-    private JButton saveFile;
-    private JButton playButton;
+    private JButton saveFileC;
+    private JButton playButtonC;
     private JButton undoButtonC;
     private JButton redoButtonC;
     private JButton importGameC;
     private char[][] board;
 
+    /* Elementos del menu Jugar */
+    private JFrame frameGamePlay;
+    private JPanel panelGamePlay;
+
+    private JButton importGameP;
+    private JButton createGameP;
+    private JButton solveButton;
+    private JButton saveSolutionButton;
+    private JButton undoButtonP;
+    private JButton redoButtonP;
+    private JButton[][] boardPiecesButtonsP;
+
     public SwingInitial() {
+        this.numFilas = DEFAULT_ROWS;
+        this.numColumnas = DEFAULT_COLS;
         inicializeClasses();
         inicializeComponents();
         addButtonsMainMenu2Arr();
@@ -70,7 +91,7 @@ public class SwingInitial {
 
         createMenuInicializeComponents();
 
-        // playMenuInicializeComponents();
+        playMenuInicializeComponents();
 
     }
 
@@ -96,24 +117,35 @@ public class SwingInitial {
     }
 
     private void createMenuInicializeComponents() {
-        createGameFrame = new JFrame("Create Game");
         createGamePanel = new JPanel();
-        boardPiecesButtons = new JButton[DEFAULT_ROWS][DEFAULT_COLS];
+        boardPiecesButtons = new JButton[this.numFilas][this.numColumnas];
 
-        rowSelector = new JSpinner(new SpinnerNumberModel(DEFAULT_ROWS, 1, 20, 1));
+        rowSelector = new JSpinner(new SpinnerNumberModel(this.numFilas, 1, 20, 1));
         JFormattedTextField rowEditor = ((JSpinner.DefaultEditor) rowSelector.getEditor()).getTextField();
         rowEditor.setEditable(false);
 
-        colSelector = new JSpinner(new SpinnerNumberModel(DEFAULT_COLS, 1, 20, 1));
+        colSelector = new JSpinner(new SpinnerNumberModel(this.numColumnas, 1, 20, 1));
         JFormattedTextField colEditor = ((JSpinner.DefaultEditor) colSelector.getEditor()).getTextField();
         colEditor.setEditable(false);
 
-        saveFile = new JButton("Save Board");
-        playButton = new JButton("Play Game");
+        saveFileC = new JButton("Save Board");
+        playButtonC = new JButton("Play Game");
         undoButtonC = new JButton("<-");
         redoButtonC = new JButton("->");
         importGameC = new JButton("Import Board");
-        board = new char[DEFAULT_ROWS][DEFAULT_COLS];
+        board = new char[this.numFilas][this.numColumnas];
+    }
+
+    private void playMenuInicializeComponents() {
+        panelGamePlay = new JPanel();
+
+        importGameP = new JButton("Import Board");
+        createGameP = new JButton("Create Board");
+        solveButton = new JButton("Solve");
+        saveSolutionButton = new JButton("Save Solution");
+        undoButtonP = new JButton("<-");
+        redoButtonP = new JButton("->");
+        board = new char[this.numFilas][this.numColumnas];
     }
 
     private void addButtonsMainMenu2Arr() {
@@ -145,6 +177,7 @@ public class SwingInitial {
 
         playGameButton.addActionListener(e -> {
             deactivateButton(playGameButton);
+            playGameFrameMode();
         });
 
         exitButton.addActionListener(e -> {
@@ -164,12 +197,11 @@ public class SwingInitial {
             updateGameBoard();
         });
 
-        saveFile.addActionListener(e -> {
-            board = getBoard();
+        saveFileC.addActionListener(e -> {
+            board = getBoard(boardPiecesButtons);
 
             if (isValid(board)) {
                 fileHandler.saveToFile(board);
-                // printMatrix(board);
 
             } else {
                 JOptionPane.showMessageDialog(null, "The board is not valid");
@@ -184,12 +216,98 @@ public class SwingInitial {
                 int nf = importedBoard.length;
                 int nc = importedBoard[0].length;
 
+                setRowsAndCols(nf, nc);
+
                 rowSelector.setValue(nf);
                 colSelector.setValue(nc);
 
                 board = copyMatrix(importedBoard);
 
-                changePieces();
+                changePieces(boardPiecesButtons);
+            }
+
+        });
+
+        playButtonC.addActionListener(e -> {
+            char[][] auxboard = getBoard(boardPiecesButtons);
+
+            if (isValid(auxboard)) {
+                setRowsAndCols(auxboard.length, auxboard[0].length);
+                createGameFrame.dispose();
+                createGamePanel.removeAll();
+                activateButton(createGameButton);
+                playGameFrameMode();
+                board = copyMatrix(auxboard);
+
+                System.out.println(board.length + " " + board[0].length);
+                System.out.println(boardPiecesButtonsP.length + " " +
+                        boardPiecesButtonsP[0].length);
+
+                changePieces(boardPiecesButtonsP);
+            } else {
+                JOptionPane.showMessageDialog(null, "The board is not valid");
+            }
+
+        });
+
+        createGameP.addActionListener(e -> {
+            System.out.println();
+            char[][] auxboard = getBoard(boardPiecesButtonsP);
+
+            System.out.println(auxboard.length + " " + auxboard[0].length);
+            System.out.println(boardPiecesButtons.length + " " +
+                    boardPiecesButtons[0].length);
+
+            if (isValid(auxboard)) {
+                setRowsAndCols(auxboard.length, auxboard[0].length);
+                frameGamePlay.dispose();
+                panelGamePlay.removeAll();
+                activateButton(playGameButton);
+                createGameFrameMode();
+
+                board = copyMatrix(auxboard);
+
+                changePieces(boardPiecesButtons);
+            } else {
+                resetRowsAndCols2Default();
+                frameGamePlay.dispose();
+                panelGamePlay.removeAll();
+                activateButton(playGameButton);
+                createGameFrameMode();
+            }
+
+        });
+
+        importGameP.addActionListener(e -> {
+            char[][] importedBoard = fileHandler.loadGame();
+
+            if (isValid(importedBoard)) {
+                int nf = importedBoard.length;
+                int nc = importedBoard[0].length;
+
+                setRowsAndCols(nf, nc);
+
+                panelGamePlay.removeAll();
+
+                createPlayGameBoard(nf, nc);
+                board = copyMatrix(importedBoard);
+
+                changePieces(boardPiecesButtonsP);
+            }
+
+        });
+
+        solveButton.addActionListener(e -> {
+            char[][] auxboard = getBoard(boardPiecesButtonsP);
+
+            if (isValid(auxboard)) {
+
+                solverHelper.setGameBoard(auxboard);
+                solverHelper.play();
+
+                // changePieces(boardPiecesButtonsP);
+            } else {
+                JOptionPane.showMessageDialog(null, "The board is not valid");
             }
 
         });
@@ -208,28 +326,28 @@ public class SwingInitial {
         return copiedMatrix;
     }
 
-    private void changePieces() {
+    private void changePieces(JButton[][] wazaBoard) {
 
-        for (int i = 0; i < boardPiecesButtons.length; i++) {
-            for (int j = 0; j < boardPiecesButtons[0].length; j++) {
+        for (int i = 0; i < wazaBoard.length; i++) {
+            for (int j = 0; j < wazaBoard[0].length; j++) {
                 char pieceInBoard = board[i][j];
 
                 if (pieceInBoard == 'R') {
                     ImageIcon icon = new ImageIcon("etc/images/fichaRoja.png");
                     Image image = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-                    boardPiecesButtons[i][j].setIcon(new ImageIcon(image));
-                    boardPiecesButtons[i][j].setText("R");
+                    wazaBoard[i][j].setIcon(new ImageIcon(image));
+                    wazaBoard[i][j].setText("R");
                 } else if (pieceInBoard == 'V') {
                     ImageIcon icon = new ImageIcon("etc/images/fichaVerde.png");
                     Image image = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-                    boardPiecesButtons[i][j].setIcon(new ImageIcon(image));
-                    boardPiecesButtons[i][j].setText("V");
+                    wazaBoard[i][j].setIcon(new ImageIcon(image));
+                    wazaBoard[i][j].setText("V");
 
                 } else if (pieceInBoard == 'A') {
                     ImageIcon icon = new ImageIcon("etc/images/fichaAzul.png");
                     Image image = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-                    boardPiecesButtons[i][j].setIcon(new ImageIcon(image));
-                    boardPiecesButtons[i][j].setText("A");
+                    wazaBoard[i][j].setIcon(new ImageIcon(image));
+                    wazaBoard[i][j].setText("A");
                 }
 
             }
@@ -246,12 +364,12 @@ public class SwingInitial {
         }
     }
 
-    private char[][] getBoard() {
-        char[][] auxBoard = new char[(int) rowSelector.getValue()][(int) colSelector.getValue()];
+    private char[][] getBoard(JButton[][] wazaBoard) {
+        char[][] auxBoard = new char[wazaBoard.length][wazaBoard[0].length];
 
         for (int i = 0; i < auxBoard.length; i++) {
             for (int j = 0; j < auxBoard[0].length; j++) {
-                String text = boardPiecesButtons[i][j].getText();
+                String text = wazaBoard[i][j].getText();
                 if (text.equals("R")) {
                     auxBoard[i][j] = 'R';
                 } else if (text.equals("V")) {
@@ -301,6 +419,65 @@ public class SwingInitial {
 
     }
 
+    private void playGameFrameMode() {
+        frameGamePlay = new JFrame("Play Game");
+        frameGamePlay.setSize(680, 680);
+        frameGamePlay.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frameGamePlay.setLocationRelativeTo(null);
+        frameGamePlay.setResizable(true);
+
+        frameGamePlay.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // Llamado cuando se cierra la ventana de juego
+                panelGamePlay.removeAll();
+                resetRowsAndCols2Default();
+                activateButton(playGameButton); // Vuelve a activar el botón al cerrar
+            }
+        });
+
+        if (board == null) {
+            setRowsAndCols(DEFAULT_ROWS, DEFAULT_COLS);
+        }
+
+        createPlayGameBoard(this.numFilas, this.numColumnas);
+
+        frameGamePlay.setVisible(true);
+    }
+
+    private void createPlayGameBoard(int nR, int nC) {
+        boardPiecesButtonsP = new JButton[nR][nC];
+
+        board = new char[nR][nC];
+
+        panelGamePlay.setLayout(new BorderLayout());
+
+        // Agregar selectores de fila y columna
+        JPanel selectorsPanel = new JPanel();
+
+        selectorsPanel.add(importGameP);
+        selectorsPanel.add(createGameP);
+        selectorsPanel.add(solveButton);
+        selectorsPanel.add(saveSolutionButton);
+        selectorsPanel.add(undoButtonP);
+        selectorsPanel.add(redoButtonP);
+        panelGamePlay.add(selectorsPanel, BorderLayout.NORTH);
+
+        JPanel boardPanel = new JPanel();
+        boardPanel.setLayout(new GridLayout(nR, nC));
+
+        for (int i = 0; i < nR; i++) {
+            for (int j = 0; j < nC; j++) {
+                JButton boardPiece = createBoardPieceButtonOnPlayMode();
+                boardPiecesButtonsP[i][j] = boardPiece;
+                boardPanel.add(boardPiece);
+            }
+        }
+
+        panelGamePlay.add(boardPanel, BorderLayout.CENTER);
+        frameGamePlay.add(panelGamePlay);
+    }
+
     private void createGameFrameMode() {
         createGameFrame = new JFrame("Create Game");
         createGameFrame.setSize(680, 680);
@@ -313,11 +490,12 @@ public class SwingInitial {
             public void windowClosing(WindowEvent e) {
                 // Llamado cuando se cierra la ventana de juego
                 activateButton(createGameButton); // Vuelve a activar el botón al cerrar
-                rowSelector.setValue(DEFAULT_ROWS);
-                colSelector.setValue(DEFAULT_COLS);
+                createGamePanel.removeAll();
+                resetRowsAndCols2Default();
+
             }
         });
-        createGameBoard(DEFAULT_ROWS, DEFAULT_COLS);
+        createGameBoard(this.numFilas, this.numColumnas);
 
         createGameFrame.setVisible(true);
     }
@@ -335,8 +513,8 @@ public class SwingInitial {
         selectorsPanel.add(rowSelector);
         selectorsPanel.add(new JLabel("Cols:"));
         selectorsPanel.add(colSelector);
-        selectorsPanel.add(saveFile);
-        selectorsPanel.add(playButton);
+        selectorsPanel.add(saveFileC);
+        selectorsPanel.add(playButtonC);
         selectorsPanel.add(undoButtonC);
         selectorsPanel.add(redoButtonC);
         selectorsPanel.add(importGameC);
@@ -369,6 +547,13 @@ public class SwingInitial {
         return boardPiece;
     }
 
+    private JButton createBoardPieceButtonOnPlayMode() {
+        JButton boardPiece = new JButton();
+        boardPiece.setPreferredSize(new Dimension(50, 50));
+        boardPiece.addActionListener(e -> handleBoardPieceButtonClickonPlayMode(boardPiece));
+        return boardPiece;
+    }
+
     /**
      * Metodo encargado de manejar el evento de click en un boton de ficha en el
      * modo creacion
@@ -394,6 +579,11 @@ public class SwingInitial {
             boardPiece.setText(options[choice]);
         }
 
+    }
+
+    private void handleBoardPieceButtonClickonPlayMode(JButton boardPiece) {
+
+        printMatrix(board);
     }
 
     /**
@@ -451,11 +641,21 @@ public class SwingInitial {
     }
 
     protected void show() {
-        mainFrame.setSize(500, 500);
+        mainFrame.setSize(400, 400);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.setResizable(true);
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setVisible(true);
+    }
+
+    private void setRowsAndCols(int filas, int columnas) {
+        this.numFilas = filas;
+        this.numColumnas = columnas;
+    }
+
+    private void resetRowsAndCols2Default() {
+        this.numFilas = DEFAULT_ROWS;
+        this.numColumnas = DEFAULT_COLS;
     }
 
 }

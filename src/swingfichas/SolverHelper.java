@@ -15,6 +15,7 @@ public class SolverHelper {
     private char[][] gameBoard;
 
     SolverHelper(char[][] gameBoardP) {
+        actualGame = 1;
         this.gameBoard = gameBoardP;
         this.actualSolutions = new ArrayList<>();
         this.bestSolutions = new ArrayList<>();
@@ -24,6 +25,7 @@ public class SolverHelper {
     SolverHelper() {
         this.actualSolutions = new ArrayList<>();
         this.bestSolutions = new ArrayList<>();
+        actualGame = 1;
     }
 
     public void setGameBoard(char[][] actualGameBoard) {
