@@ -4,8 +4,12 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -18,12 +22,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeListener;
+import javax.swing.SwingWorker;
 
 public class SwingInitial {
 
     private FileHandler fileHandler;
     private SolverHelper solverHelper;
+    // private RedoAndUndo redoAndUndo;
 
     private final int DEFAULT_ROWS = 3;
     private final int DEFAULT_COLS = 3;
@@ -69,9 +74,14 @@ public class SwingInitial {
     private JButton redoButtonP;
     private JButton[][] boardPiecesButtonsP;
 
+    private int totalPoints;
+    private int totalPiecesDeleted;
+
     public SwingInitial() {
         this.numFilas = DEFAULT_ROWS;
         this.numColumnas = DEFAULT_COLS;
+        totalPoints = 0;
+        totalPiecesDeleted = 0;
         inicializeClasses();
         inicializeComponents();
         addButtonsMainMenu2Arr();
@@ -82,7 +92,7 @@ public class SwingInitial {
 
     private void inicializeClasses() {
         fileHandler = new FileHandler();
-        solverHelper = new SolverHelper();
+        // redoAndUndo = new RedoAndUndo();
     }
 
     private void inicializeComponents() {
@@ -239,9 +249,7 @@ public class SwingInitial {
                 playGameFrameMode();
                 board = copyMatrix(auxboard);
 
-                System.out.println(board.length + " " + board[0].length);
-                System.out.println(boardPiecesButtonsP.length + " " +
-                        boardPiecesButtonsP[0].length);
+                solverHelper = new SolverHelper(board);
 
                 changePieces(boardPiecesButtonsP);
             } else {
@@ -251,18 +259,15 @@ public class SwingInitial {
         });
 
         createGameP.addActionListener(e -> {
-            System.out.println();
-            char[][] auxboard = getBoard(boardPiecesButtonsP);
 
-            System.out.println(auxboard.length + " " + auxboard[0].length);
-            System.out.println(boardPiecesButtons.length + " " +
-                    boardPiecesButtons[0].length);
+            char[][] auxboard = getBoard(boardPiecesButtonsP);
 
             if (isValid(auxboard)) {
                 setRowsAndCols(auxboard.length, auxboard[0].length);
                 frameGamePlay.dispose();
                 panelGamePlay.removeAll();
                 activateButton(playGameButton);
+                deactivateButton(createGameButton);
                 createGameFrameMode();
 
                 board = copyMatrix(auxboard);
@@ -292,26 +297,109 @@ public class SwingInitial {
                 createPlayGameBoard(nf, nc);
                 board = copyMatrix(importedBoard);
 
+                solverHelper = new SolverHelper(board);
+
+                // solverHelper.setGameBoard(board);
                 changePieces(boardPiecesButtonsP);
             }
 
         });
 
-        solveButton.addActionListener(e -> {
-            char[][] auxboard = getBoard(boardPiecesButtonsP);
-
-            if (isValid(auxboard)) {
-
-                solverHelper.setGameBoard(auxboard);
-                solverHelper.play();
-
-                // changePieces(boardPiecesButtonsP);
-            } else {
-                JOptionPane.showMessageDialog(null, "The board is not valid");
-            }
+        undoButtonC.addActionListener(e -> {
 
         });
 
+        redoButtonC.addActionListener(e -> {
+
+        });
+
+        solveButton.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+
+                    @Override
+                    protected Void doInBackground() throws Exception {
+
+                        char[][] auxboard = getBoard(boardPiecesButtonsP);
+
+                        if (isValidResult(auxboard)) {
+
+                            board = copyMatrix(auxboard);
+
+                            solverHelper = new SolverHelper(board);
+                            // solverHelper.setGameBoard(board);
+                            solverHelper.play();
+
+                            setRowsAndCols(numFilas, numColumnas);
+
+                            panelGamePlay.removeAll();
+
+                            createPlayGameBoard(numFilas, numFilas);
+                            board = solverHelper.getBoardResult();
+
+                            changePieces(boardPiecesButtonsP);
+
+                        } else {
+                            JOptionPane.showMessageDialog(null, "The board is not valid");
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        try {
+                            // Obtén el resultado del SwingWorker
+
+                            // Muestra los movimientos en un JOptionPane
+                            List<String> wazza = solverHelper.getResultList();
+                            StringBuilder movesText = new StringBuilder("Movimientos:\n");
+                            for (String move : wazza) {
+                                movesText.append(move).append("\n");
+                            }
+
+                            int option = JOptionPane.showOptionDialog(
+                                    null,
+                                    movesText.toString(),
+                                    "Movimientos",
+                                    JOptionPane.YES_NO_OPTION,
+                                    JOptionPane.INFORMATION_MESSAGE,
+                                    null,
+                                    new Object[] { "Guardar", "Salir" },
+                                    null);
+
+                            if (option == JOptionPane.YES_OPTION) {
+                                fileHandler.saveGameSolution(wazza);
+                                JOptionPane.showMessageDialog(null, "Thanks for playing!");
+                                System.exit(0);
+                            } else {
+                                int responseExit = JOptionPane.showConfirmDialog(null, "Do you want to exit the game?",
+                                        "Exit Confirmation",
+                                        JOptionPane.YES_NO_OPTION);
+                                if (responseExit == JOptionPane.YES_OPTION) {
+                                    JOptionPane.showMessageDialog(null, "Thanks for playing!");
+                                    System.exit(0);
+                                } else {
+                                    enableBoard();
+                                    setRowsAndCols(DEFAULT_ROWS, DEFAULT_COLS);
+                                    frameGamePlay.dispose();
+                                    panelGamePlay.removeAll();
+
+                                    playGameFrameMode();
+                                }
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                };
+                worker.execute();
+
+            }
+        });
     }
 
     private char[][] copyMatrix(char[][] importedBoard) {
@@ -348,6 +436,9 @@ public class SwingInitial {
                     Image image = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
                     wazaBoard[i][j].setIcon(new ImageIcon(image));
                     wazaBoard[i][j].setText("A");
+                } else {
+                    wazaBoard[i][j].setIcon(null);
+                    wazaBoard[i][j].setText("-");
                 }
 
             }
@@ -399,6 +490,28 @@ public class SwingInitial {
         }
 
         return true;
+    }
+
+    private boolean isValidResult(char[][] matrix) {
+        int count = 0;
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[0].length; j++) {
+                if (matrix[i][j] == '-') {
+                    count++;
+                }
+            }
+        }
+
+        int nf = matrix.length;
+        int nc = matrix[0].length;
+
+        if (count < (nf * nc)) {
+            return true;
+
+        } else {
+            return false;
+        }
+
     }
 
     /**
@@ -484,7 +597,6 @@ public class SwingInitial {
         createGameFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         createGameFrame.setLocationRelativeTo(null);
         createGameFrame.setResizable(true);
-
         createGameFrame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -550,6 +662,7 @@ public class SwingInitial {
     private JButton createBoardPieceButtonOnPlayMode() {
         JButton boardPiece = new JButton();
         boardPiece.setPreferredSize(new Dimension(50, 50));
+
         boardPiece.addActionListener(e -> handleBoardPieceButtonClickonPlayMode(boardPiece));
         return boardPiece;
     }
@@ -577,13 +690,220 @@ public class SwingInitial {
 
             updatePieceImage(boardPiece, options[choice]);
             boardPiece.setText(options[choice]);
+
         }
 
     }
 
     private void handleBoardPieceButtonClickonPlayMode(JButton boardPiece) {
 
-        printMatrix(board);
+        int[] cord = getButtonClickedCoordinates(boardPiece);
+
+        int coordX = cord[0];
+        int coordY = cord[1];
+
+        board = getBoard(boardPiecesButtonsP);
+
+        if (isValidResult(board)) {
+            solverHelper = new SolverHelper(board);
+            // solverHelper.setGameBoard(board);
+
+            if (!solverHelper.isGroupByPos(coordX, coordY, board, board[coordX][coordY])) {
+                JOptionPane.showMessageDialog(null, "No se puede eliminar porque no es grupo");
+                return;
+            }
+
+            if (board[coordX][coordY] == '-') {
+                JOptionPane.showMessageDialog(null, "No se puede eliminar porque es una pieza vacia");
+                return;
+            }
+
+            solverHelper.printMatrxz();
+
+            int piezasdeleted = solverHelper.removeGroup(board, coordX, coordY);
+            int puntos = solverHelper.getPointWithDeletedPieces(board, piezasdeleted);
+
+            totalPiecesDeleted += piezasdeleted;
+            totalPoints += puntos;
+
+            System.out.println("Puntos y piezas eliminadas: " + puntos + " " +
+                    piezasdeleted);
+
+            board = solverHelper.getBoardResult();
+
+            printMatrix(board);
+
+            changePieces(boardPiecesButtonsP);
+
+            if (solverHelper.getLeftPieces(board) == 0) {
+                totalPoints += 1000;
+                disableBoard();
+
+                int option = JOptionPane.showOptionDialog(
+                        null,
+                        "¡Enhorabuena, has completado el tablero sin piezas restantes!\nPiezas eliminadas: "
+                                + totalPiecesDeleted + "\nPuntos: " + totalPoints,
+                        "Victoria",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE,
+                        null,
+                        new Object[] { "Jugar otra vez", "Salir" },
+                        null);
+
+                if (option == JOptionPane.YES_OPTION) {
+                    enableBoard();
+                    setRowsAndCols(DEFAULT_ROWS, DEFAULT_COLS);
+                    this.totalPoints = 0;
+                    this.totalPiecesDeleted = 0;
+                    frameGamePlay.dispose();
+                    panelGamePlay.removeAll();
+
+                    playGameFrameMode();
+                } else {
+
+                    int responseExit = JOptionPane.showConfirmDialog(null, "Do you want to exit the game?",
+                            "Exit Confirmation",
+                            JOptionPane.YES_NO_OPTION);
+                    if (responseExit == JOptionPane.YES_OPTION) {
+                        JOptionPane.showMessageDialog(null, "Thanks for playing!");
+                        System.exit(0);
+                    } else {
+                        enableBoard();
+                        setRowsAndCols(DEFAULT_ROWS, DEFAULT_COLS);
+                        this.totalPoints = 0;
+                        this.totalPiecesDeleted = 0;
+                        frameGamePlay.dispose();
+                        panelGamePlay.removeAll();
+
+                        playGameFrameMode();
+                    }
+                }
+
+            } else if (solverHelper.getLeftPieces(board) == 1) {
+                disableBoard();
+
+                int option = JOptionPane.showOptionDialog(
+                        null,
+                        "¡Has completado el tablero pero con piezas restantes!\nPiezas eliminadas: "
+                                + totalPiecesDeleted + "\nPuntos: " + totalPoints,
+                        "Completado",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE,
+                        null,
+                        new Object[] { "Jugar otra vez", "Salir" },
+                        null);
+
+                if (option == JOptionPane.YES_OPTION) {
+                    enableBoard();
+                    setRowsAndCols(DEFAULT_ROWS, DEFAULT_COLS);
+                    this.totalPoints = 0;
+                    this.totalPiecesDeleted = 0;
+                    frameGamePlay.dispose();
+                    panelGamePlay.removeAll();
+
+                    playGameFrameMode();
+                } else {
+                    int responseExit = JOptionPane.showConfirmDialog(null, "Do you want to exit the game?",
+                            "Exit Confirmation",
+                            JOptionPane.YES_NO_OPTION);
+                    if (responseExit == JOptionPane.YES_OPTION) {
+                        JOptionPane.showMessageDialog(null, "Thanks for playing!");
+                        System.exit(0);
+                    } else {
+                        enableBoard();
+                        setRowsAndCols(DEFAULT_ROWS, DEFAULT_COLS);
+                        this.totalPoints = 0;
+                        this.totalPiecesDeleted = 0;
+                        frameGamePlay.dispose();
+                        panelGamePlay.removeAll();
+
+                        playGameFrameMode();
+                    }
+                }
+            } else {
+                List<int[]> posibleMoves = new ArrayList<>();
+                solverHelper.checkMoves(board, posibleMoves);
+                for (int i = 0; i < posibleMoves.size(); i++) {
+                    int[] move = posibleMoves.get(i);
+                    System.out.println("Movimiento #" + (i + 1) + ": (" + move[0] + ", " + move[1] + ")");
+                }
+
+                if (posibleMoves.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "No hay movimientos posibles");
+                }
+
+            }
+
+        }
+
+    }
+
+    private void disableBoard() {
+        for (int i = 0; i < boardPiecesButtonsP.length; i++) {
+            for (int j = 0; j < boardPiecesButtonsP[0].length; j++) {
+                boardPiecesButtonsP[i][j].setEnabled(false);
+            }
+        }
+    }
+
+    private void enableBoard() {
+        for (int i = 0; i < boardPiecesButtonsP.length; i++) {
+            for (int j = 0; j < boardPiecesButtonsP[0].length; j++) {
+                boardPiecesButtonsP[i][j].setEnabled(true);
+            }
+        }
+    }
+
+    private int[] getButtonClickedCoordinates(JButton boardPiece) {
+        int row = -1;
+        int col = -1;
+
+        // Buscar la posición del botón en el array
+        for (int i = 0; i < boardPiecesButtonsP.length; i++) {
+            for (int j = 0; j < boardPiecesButtonsP[0].length; j++) {
+                if (boardPiecesButtonsP[i][j] == boardPiece) {
+                    row = i;
+                    col = j;
+                    break;
+                }
+            }
+            if (row != -1) {
+                break;
+            }
+        }
+
+        char targetPiece = board[row][col];
+
+        // Inicializar la posición más a la izquierda y abajo
+        int bottomLeftRow = row;
+        int bottomLeftCol = col;
+
+        // Definir las direcciones (izquierda, derecha, arriba, abajo)
+        int[] directionRows = { 0, 0, -1, 1 };
+        int[] directionCols = { -1, 1, 0, 0 };
+
+        // Iterar sobre las direcciones
+        for (int i = 0; i < directionRows.length; i++) {
+            int currentRow = row;
+            int currentCol = col;
+
+            // Mover en la dirección actual hasta encontrar el límite del grupo
+            while (isValidPosition(currentRow, currentCol) && board[currentRow][currentCol] == targetPiece) {
+                bottomLeftRow = currentRow;
+                bottomLeftCol = currentCol;
+
+                // Mover a la siguiente posición en la dirección actual
+                currentRow += directionRows[i];
+                currentCol += directionCols[i];
+            }
+        }
+
+        return new int[] { bottomLeftRow, bottomLeftCol };
+
+    }
+
+    private boolean isValidPosition(int row, int col) {
+        return row >= 0 && row < board.length && col >= 0 && col < board[0].length;
     }
 
     /**

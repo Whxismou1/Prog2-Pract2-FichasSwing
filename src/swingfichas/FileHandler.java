@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -113,8 +114,22 @@ public class FileHandler {
         }
     }
 
-    protected void saveGameSolution() {
+    protected void saveGameSolution(List<String> wazza) {
+        int userSelection = fileChooser.showSaveDialog(null);
 
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            try (PrintWriter writer = new PrintWriter(new FileWriter(fileChooser.getSelectedFile()))) {
+                for (String move : wazza) {
+                    writer.println(move);
+                }
+                JOptionPane.showMessageDialog(null, "Game solution saved to " + fileChooser.getSelectedFile());
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Error saving game solution to file: " + e.getMessage());
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "Save canceled by user.");
+        }
     }
 
 }

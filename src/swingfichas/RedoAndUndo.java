@@ -1,49 +1,58 @@
 package swingfichas;
 
-import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Stack;
+
+import javax.swing.JButton;
 
 public class RedoAndUndo {
-    private ConcurrentHashMap<Integer, GmeState> previusState;
-    private ConcurrentHashMap<Integer, GmeState> nextState;
 
-    protected RedoAndUndo() {
-        previusState = new ConcurrentHashMap<>();
-        nextState = new ConcurrentHashMap<>();
+    private Stack<char[][]> undoStack;
+    private Stack<char[][]> redoStack;
+
+    public RedoAndUndo() {
+        undoStack = new Stack<>();
+        redoStack = new Stack<>();
     }
 
-    protected boolean addPrevState(GmeState gameState) {
-        GmeState put = previusState.put(null, gameState);
-        return (put != null);
+    public void push(char[][] board) {
+        undoStack.push(cloneBoard(board));
+        redoStack.clear(); // Al realizar una nueva acción, se debe limpiar el stack de redo
     }
 
-    protected boolean addNextState(GmeState gameState) {
-        GmeState put = previusState.put(null, gameState);
-        return (put != null);
+    public void undo() {
+        if (!undoStack.isEmpty()) {
+            redoStack.push(cloneBoard(undoStack.pop()));
+        }
     }
 
-    protected void undoState() {
-
+    public void redo() {
+        if (!redoStack.isEmpty()) {
+            undoStack.push(cloneBoard(redoStack.pop()));
+        }
     }
 
-    protected Collection<GmeState> getPreviusState() {
-        return previusState.values();
+    public char[][] getCurrentBoard() {
+        if (!undoStack.isEmpty()) {
+            return cloneBoard(undoStack.peek());
+        }
+        return null; // Puedes manejar esto según tus necesidades
     }
 
-    protected Collection<GmeState> getNextState() {
-        return nextState.values();
+    private char[][] cloneBoard(char[][] original) {
+        int rows = original.length;
+        int cols = original[0].length;
+        char[][] clone = new char[rows][cols];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                clone[i][j] = original[i][j];
+            }
+        }
+        return clone;
     }
 
-    protected boolean canUndo() {
-        return !previusState.isEmpty();
-    }
-
-    protected boolean canRedo() {
-        return !nextState.isEmpty();
-    }
-
-    public class GmeState {
-
+    protected void resetUndoAndRedo() {
+        undoStack.clear();
+        redoStack.clear();
     }
 
 }

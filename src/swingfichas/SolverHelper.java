@@ -11,35 +11,38 @@ public class SolverHelper {
     private List<int[]> actualSolutions;
     private List<int[]> bestSolutions;
 
+    private List<String> resultList;
+
     // Matriz donde se guarda el tablero de chars
     private char[][] gameBoard;
+
+    private char[][] gameBoardResult;
 
     SolverHelper(char[][] gameBoardP) {
         actualGame = 1;
         this.gameBoard = gameBoardP;
+        this.gameBoardResult = gameBoardP;
+
         this.actualSolutions = new ArrayList<>();
         this.bestSolutions = new ArrayList<>();
-        play();
+        this.resultList = new ArrayList<>();
     }
 
-    SolverHelper() {
-        this.actualSolutions = new ArrayList<>();
-        this.bestSolutions = new ArrayList<>();
-        actualGame = 1;
-    }
+    // SolverHelper() {
+    // this.actualSolutions = new ArrayList<>();
+    // this.bestSolutions = new ArrayList<>();
+    // actualGame = 1;
+    // }
 
-    public void setGameBoard(char[][] actualGameBoard) {
-        this.gameBoard = actualGameBoard;
+    // public void setGameBoard(char[][] actualGameBoard) {
+    // this.gameBoard = new char[actualGameBoard.length][actualGameBoard[0].length];
+    // for (int i = 0; i < actualGameBoard.length; i++) {
+    // for (int j = 0; j < actualGameBoard[0].length; j++) {
+    // this.gameBoard[i][j] = actualGameBoard[i][j];
+    // }
+    // }
 
-        for (int i = 0; i < this.gameBoard.length; i++) {
-            for (int j = 0; j < this.gameBoard[0].length; j++) {
-                System.out.print(this.gameBoard[i][j]);
-            }
-            System.out.println();
-
-        }
-
-    }
+    // }
 
     /***
      * Metodo principal del juego
@@ -56,20 +59,30 @@ public class SolverHelper {
 
         findSolutions4Board(this.gameBoard, posibleMoves);
 
-        printActualGameSolution(actualGame, gameBoard);
+        String result = printActualGameSolution(actualGame, gameBoard);
+
+        resultList.add(result);
+
+        gameBoardResult = matrixCopy(gameBoard);
+
         gameBoard = null;
         bestScore = 0;
         actualSolutions.clear();
 
         bestSolutions.clear();
 
-        // se incrementa el juego
-        // this.actualGame++;
-        // }
-
     }
 
-    protected void printActualGameSolution(int actualGame, char[][] boardGameP) {
+    protected void printMatrxz() {
+        for (int i = 0; i < gameBoard.length; i++) {
+            for (int j = 0; j < gameBoard[0].length; j++) {
+                System.out.print(gameBoard[i][j]);
+            }
+            System.out.println();
+        }
+    }
+
+    protected String printActualGameSolution(int actualGame, char[][] boardGameP) {
         StringBuilder sb = new StringBuilder();
         sb.append("Juego " + actualGame + ":" + "\n");
 
@@ -120,6 +133,7 @@ public class SolverHelper {
         // sb.append("\n");
         // }
         System.out.println(sb);
+        return sb.toString();
     }
 
     protected void checkMoves(char[][] boardGameP, List<int[]> posibleMoves) {
@@ -342,6 +356,22 @@ public class SolverHelper {
 
         return copiedMatrix;
 
+    }
+
+    protected char[][] getBoardResult() {
+        char[][] boardResult = new char[gameBoardResult.length][gameBoardResult[0].length];
+
+        for (int row = 0; row < gameBoardResult.length; row++) {
+            for (int col = 0; col < gameBoardResult[0].length; col++) {
+                boardResult[row][col] = gameBoardResult[row][col];
+            }
+        }
+
+        return boardResult;
+    }
+
+    protected List<String> getResultList() {
+        return resultList;
     }
 
 }
