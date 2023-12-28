@@ -61,6 +61,7 @@ public class SwingInitial {
     private JButton redoButtonC;
     private JButton importGameC;
     private char[][] board;
+    private List<List<Integer>> actualMoves;
 
     /* Elementos del menu Jugar */
     private JFrame frameGamePlay;
@@ -82,6 +83,7 @@ public class SwingInitial {
         this.numColumnas = DEFAULT_COLS;
         totalPoints = 0;
         totalPiecesDeleted = 0;
+        actualMoves = new ArrayList<>();
         inicializeClasses();
         inicializeComponents();
         addButtonsMainMenu2Arr();
@@ -546,6 +548,7 @@ public class SwingInitial {
                 panelGamePlay.removeAll();
                 resetRowsAndCols2Default();
                 activateButton(playGameButton); // Vuelve a activar el botón al cerrar
+                actualMoves.clear();
             }
         });
 
@@ -707,7 +710,7 @@ public class SwingInitial {
         if (isValidResult(board)) {
             solverHelper = new SolverHelper(board);
             // solverHelper.setGameBoard(board);
-
+            int numInitialPieces = solverHelper.getLeftPieces(board);
             if (!solverHelper.isGroupByPos(coordX, coordY, board, board[coordX][coordY])) {
                 JOptionPane.showMessageDialog(null, "No se puede eliminar porque no es grupo");
                 return;
@@ -719,10 +722,12 @@ public class SwingInitial {
             }
 
             solverHelper.printMatrxz();
-
+            char color = board[coordX][coordY];
             int piezasdeleted = solverHelper.removeGroup(board, coordX, coordY);
             int puntos = solverHelper.getPointWithDeletedPieces(board, piezasdeleted);
 
+            actualMoves.add(List.of(coordX, coordY, piezasdeleted, puntos, (int) color));
+            System.out.println(actualMoves);
             totalPiecesDeleted += piezasdeleted;
             totalPoints += puntos;
 
@@ -744,10 +749,10 @@ public class SwingInitial {
                         "¡Enhorabuena, has completado el tablero sin piezas restantes!\nPiezas eliminadas: "
                                 + totalPiecesDeleted + "\nPuntos: " + totalPoints,
                         "Victoria",
-                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.YES_NO_CANCEL_OPTION,
                         JOptionPane.INFORMATION_MESSAGE,
                         null,
-                        new Object[] { "Jugar otra vez", "Salir" },
+                        new Object[] { "Jugar otra vez", "Guardar movimientos", "Salir" },
                         null);
 
                 if (option == JOptionPane.YES_OPTION) {
@@ -759,6 +764,10 @@ public class SwingInitial {
                     panelGamePlay.removeAll();
 
                     playGameFrameMode();
+                } else if (option == JOptionPane.NO_OPTION) {
+                    fileHandler.saveMyGameSolution(actualMoves, totalPoints);
+                    JOptionPane.showMessageDialog(null, "Thanks for playing!");
+                    System.exit(0);
                 } else {
 
                     int responseExit = JOptionPane.showConfirmDialog(null, "Do you want to exit the game?",

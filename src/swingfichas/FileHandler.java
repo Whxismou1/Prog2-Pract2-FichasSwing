@@ -132,4 +132,42 @@ public class FileHandler {
         }
     }
 
+    protected void saveMyGameSolution(List<List<Integer>> actualMoves, int totalPuntos) {
+        int userSelection = fileChooser.showSaveDialog(null);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            try (PrintWriter writer = new PrintWriter(new FileWriter(fileChooser.getSelectedFile()))) {
+
+                int remainingPieces = 0;
+
+                writer.println("Juego 1:");
+
+                for (int i = 0; i < actualMoves.size(); i++) {
+                    List<Integer> move = actualMoves.get(i);
+                    int row = move.get(0);
+                    int col = move.get(1);
+                    int piecesDeleted = move.get(2);
+                    int points = move.get(3);
+                    char color = (char) (int) move.get(4);
+
+                    remainingPieces += piecesDeleted;
+
+                    writer.println("Movimiento " + (i + 1) + " en (" + row + ", " + col + "): eliminó " +
+                            piecesDeleted + " fichas de color " + color + " y obtuvo " +
+                            points + " punto" + (points > 1 ? "s" : "") + ".");
+                }
+
+                writer.println("Puntuación final: " + totalPuntos + ", quedando " +
+                        remainingPieces + " fichas.");
+
+                JOptionPane.showMessageDialog(null, "Game solution saved to " + fileChooser.getSelectedFile());
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Error saving game solution to file: " + e.getMessage());
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "Save canceled by user.");
+        }
+    }
+
 }
