@@ -12,6 +12,7 @@ public class SolverHelper {
     private List<int[]> bestSolutions;
 
     private List<String> resultList;
+    private List<String> resultListSolver;
 
     // Matriz donde se guarda el tablero de chars
     private char[][] gameBoard;
@@ -26,6 +27,7 @@ public class SolverHelper {
         this.actualSolutions = new ArrayList<>();
         this.bestSolutions = new ArrayList<>();
         this.resultList = new ArrayList<>();
+        this.resultListSolver = new ArrayList<>();
     }
 
     // SolverHelper() {
@@ -60,15 +62,14 @@ public class SolverHelper {
         findSolutions4Board(this.gameBoard, posibleMoves);
 
         String result = printActualGameSolution(actualGame, gameBoard);
-
+        String resultSolver = printActualGameSolutionForSolver(actualGame, gameBoard);
         resultList.add(result);
-
+        resultListSolver.add(resultSolver);
         gameBoardResult = matrixCopy(gameBoard);
 
         gameBoard = null;
         bestScore = 0;
         actualSolutions.clear();
-
         bestSolutions.clear();
 
     }
@@ -132,7 +133,45 @@ public class SolverHelper {
         // if (!isLastGame) {
         // sb.append("\n");
         // }
-        System.out.println(sb);
+        // System.out.println(sb);
+        return sb.toString();
+    }
+
+    protected String printActualGameSolutionForSolver(int actualGame, char[][] boardGameP) {
+        StringBuilder sb = new StringBuilder();
+        // sb.append("Movimientos disponibles\n");
+
+        for (int i = 0; i < this.bestSolutions.size(); i++) {
+            int[] arrSolutions = this.bestSolutions.get(i);
+
+            int movesScore = getPointWithDeletedPieces(boardGameP, arrSolutions[2]);
+
+            int row = arrSolutions[0];
+            int col = arrSolutions[1];
+
+            removeGroup(boardGameP, row, col);
+            if (movesScore == 1) {
+                sb.append("Movimiento ").append(i + 1).append(" en (")
+                        .append(getTotalRows(boardGameP) - arrSolutions[0])
+                        .append(", ")
+                        .append(arrSolutions[1] + 1).append("): para eliminar ").append(arrSolutions[2])
+                        .append(" fichas de color ")
+                        .append((char) arrSolutions[3]).append("\n");
+            } else {
+                sb.append("Movimiento ").append(i + 1).append(" en (")
+                        .append(getTotalRows(boardGameP) - arrSolutions[0])
+                        .append(", ")
+                        .append(arrSolutions[1] + 1).append("): para eliminar ").append(arrSolutions[2])
+                        .append(" fichas de color ")
+                        .append((char) arrSolutions[3]).append("\n");
+            }
+
+        }
+
+        // if (!isLastGame) {
+        // sb.append("\n");
+        // }
+        // System.out.println(sb);
         return sb.toString();
     }
 
@@ -372,6 +411,10 @@ public class SolverHelper {
 
     protected List<String> getResultList() {
         return resultList;
+    }
+
+    protected List<String> getResultListSolver() {
+        return resultListSolver;
     }
 
 }

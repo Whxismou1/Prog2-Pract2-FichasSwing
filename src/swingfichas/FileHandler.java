@@ -105,13 +105,49 @@ public class FileHandler {
                 currentRow++;
             }
 
-            return loadedBoard;
+            if (isValid(loadedBoard)) {
+                return loadedBoard;
+            } else {
+                // Manejar el error según tus necesidades (por ejemplo, mostrar un mensaje de
+                // error)
+                JOptionPane.showMessageDialog(null, "ERROR: Tablero invalido en importar");
+                return null;
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
-            // Manejar la excepción según tus necesidades (por ejemplo, mostrar un mensaje
-            // de error)
+
             return null;
         }
+    }
+
+    private boolean isValid(char[][] loadedBoard) {
+        if (loadedBoard == null) {
+            return false;
+        }
+
+        int numRows = loadedBoard.length;
+        int numCols = (numRows > 0) ? loadedBoard[0].length : 0;
+
+        // Comprobar que el número de filas esté en el rango [1, 20]
+        if (numRows < 1 || numRows > 20) {
+            return false;
+        }
+
+        if (numCols < 1 || numCols > 20) {
+            return false;
+        }
+
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                char actualChar = loadedBoard[i][j];
+                if (actualChar != 'R' && actualChar != 'V' && actualChar != 'A') {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     protected void saveGameSolution(List<String> wazza) {
@@ -132,13 +168,11 @@ public class FileHandler {
         }
     }
 
-    protected void saveMyGameSolution(List<List<Integer>> actualMoves, int totalPuntos) {
+    protected void saveMyGameSolution(List<List<Integer>> actualMoves, int totalPuntos, int leftPieces) {
         int userSelection = fileChooser.showSaveDialog(null);
 
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             try (PrintWriter writer = new PrintWriter(new FileWriter(fileChooser.getSelectedFile()))) {
-
-                int remainingPieces = 0;
 
                 writer.println("Juego 1:");
 
@@ -150,15 +184,13 @@ public class FileHandler {
                     int points = move.get(3);
                     char color = (char) (int) move.get(4);
 
-                    remainingPieces += piecesDeleted;
-
                     writer.println("Movimiento " + (i + 1) + " en (" + row + ", " + col + "): eliminó " +
                             piecesDeleted + " fichas de color " + color + " y obtuvo " +
                             points + " punto" + (points > 1 ? "s" : "") + ".");
                 }
 
                 writer.println("Puntuación final: " + totalPuntos + ", quedando " +
-                        remainingPieces + " fichas.");
+                        leftPieces + " fichas.");
 
                 JOptionPane.showMessageDialog(null, "Game solution saved to " + fileChooser.getSelectedFile());
             } catch (IOException e) {

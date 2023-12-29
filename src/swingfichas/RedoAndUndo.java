@@ -1,58 +1,26 @@
 package swingfichas;
-
-import java.util.Stack;
-
-import javax.swing.JButton;
+// ...
 
 public class RedoAndUndo {
+    private char[][] boardState;
+    private int totalPoints;
+    private int totalPiecesDeleted;
 
-    private Stack<char[][]> undoStack;
-    private Stack<char[][]> redoStack;
-
-    public RedoAndUndo() {
-        undoStack = new Stack<>();
-        redoStack = new Stack<>();
+    public RedoAndUndo(char[][] boardState, int totalPoints, int totalPiecesDeleted) {
+        this.boardState = boardState;
+        this.totalPoints = totalPoints;
+        this.totalPiecesDeleted = totalPiecesDeleted;
     }
 
-    public void push(char[][] board) {
-        undoStack.push(cloneBoard(board));
-        redoStack.clear(); // Al realizar una nueva acción, se debe limpiar el stack de redo
+    public char[][] getBoardState() {
+        return boardState;
     }
 
-    public void undo() {
-        if (!undoStack.isEmpty()) {
-            redoStack.push(cloneBoard(undoStack.pop()));
-        }
+    public int getTotalPoints() {
+        return totalPoints;
     }
 
-    public void redo() {
-        if (!redoStack.isEmpty()) {
-            undoStack.push(cloneBoard(redoStack.pop()));
-        }
+    public int getTotalPiecesDeleted() {
+        return totalPiecesDeleted;
     }
-
-    public char[][] getCurrentBoard() {
-        if (!undoStack.isEmpty()) {
-            return cloneBoard(undoStack.peek());
-        }
-        return null; // Puedes manejar esto según tus necesidades
-    }
-
-    private char[][] cloneBoard(char[][] original) {
-        int rows = original.length;
-        int cols = original[0].length;
-        char[][] clone = new char[rows][cols];
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                clone[i][j] = original[i][j];
-            }
-        }
-        return clone;
-    }
-
-    protected void resetUndoAndRedo() {
-        undoStack.clear();
-        redoStack.clear();
-    }
-
 }
