@@ -10,7 +10,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -30,8 +32,8 @@ public class SwingInitial {
     private List<List<char[][]>> undoManagerC;
     private List<List<char[][]>> redoManagerC;
 
-    private List<char[][]> undoManagerP;
-    private List<char[][]> redoManagerP;
+    private List<Map<String, Object>> undoManagerP;
+    private List<Map<String, Object>> redoManagerP;
 
     private FileHandler fileHandler;
     private SolverHelper solverHelper;
@@ -274,7 +276,7 @@ public class SwingInitial {
                 solverHelper = new SolverHelper(board);
 
                 changePieces(boardPiecesButtonsP);
-                undoManagerP.add(board);
+                // undoManagerP.add(board);
             } else {
                 JOptionPane.showMessageDialog(null, "The board is not valid");
             }
@@ -323,6 +325,8 @@ public class SwingInitial {
                 board = copyMatrix(importedBoard);
                 // undoManagerP.add(board);
                 solverHelper = new SolverHelper(board);
+                this.totalPoints = 0;
+                this.totalPiecesDeleted = 0;
 
                 // solverHelper.setGameBoard(board);
                 changePieces(boardPiecesButtonsP);
@@ -344,17 +348,26 @@ public class SwingInitial {
         undoButtonP.addActionListener(e -> {
             // performUndo(undoManagerP, redoManagerP, currentStateIndexP);
             if (!undoManagerP.isEmpty()) {
+                int cuurentPoints = this.totalPoints;
+                int deletedPieces = this.totalPiecesDeleted;
 
-                char[][] undoneState = undoManagerP.remove(undoManagerP.size() - 1);
-                redoManagerP.add(copyMatrix(getBoard(boardPiecesButtonsP)));
+                Map<String, Object> lastState = undoManagerP.remove(undoManagerP.size() - 1);
+                this.totalPoints = (int) lastState.get("totalPoints"); // Actualizar total de puntos
+                this.totalPiecesDeleted = (int) lastState.get("totalPiecesDeleted");
+                char[][] boardState = (char[][]) lastState.get("boardState"); // Actualizar estado del tablero
+
+                Map<String, Object> currentState = new HashMap<>();
+                currentState.put("boardState", getBoard(boardPiecesButtonsP));
+                currentState.put("totalPoints", cuurentPoints);
+                currentState.put("totalPiecesDeleted", deletedPieces);
+
+                redoManagerP.add(currentState);
                 // board = copyMatrix(undoneState);
 
                 panelGamePlay.removeAll();
 
                 createPlayGameBoard(this.numFilas, this.numColumnas);
-                board = copyMatrix(undoneState);
-
-                solverHelper = new SolverHelper(board);
+                board = copyMatrix(boardState);
 
                 changePieces(boardPiecesButtonsP);
             }
@@ -364,17 +377,30 @@ public class SwingInitial {
         redoButtonP.addActionListener(e -> {
             // performRedo(undoManagerP, redoManagerP, currentStateIndexP);
             if (!redoManagerP.isEmpty()) {
-                char[][] redoneState = copyMatrix(redoManagerP.remove(redoManagerP.size() - 1));
+                int currentPoints = this.totalPoints;
+                int currentPiecesDeleted = this.totalPiecesDeleted;
 
-                undoManagerP.add(copyMatrix(getBoard(boardPiecesButtonsP)));
+                Map<String, Object> redoneState = redoManagerP.remove(redoManagerP.size() - 1);
+                this.totalPoints = (int) redoneState.get("totalPoints"); // Actualizar total de puntos
+                this.totalPiecesDeleted = (int) redoneState.get("totalPiecesDeleted"); // Actualizar total de piezas
+                // eliminadas
+
+                char[][] boardState = (char[][]) redoneState.get("boardState");
+                // char[][] redoneState = copyMatrix(redoManagerP.remove(redoManagerP.size() -
+                // 1));
+
+                Map<String, Object> currentState = new HashMap<>();
+                currentState.put("boardState", getBoard(boardPiecesButtonsP));
+                currentState.put("totalPoints", currentPoints);
+                currentState.put("totalPiecesDeleted", currentPiecesDeleted);
+
+                undoManagerP.add(currentState);
                 // board = copyMatrix(redoneState);
 
                 panelGamePlay.removeAll();
                 createPlayGameBoard(this.numFilas, this.numColumnas);
 
-                board = copyMatrix(redoneState);
-
-                solverHelper = new SolverHelper(board);
+                board = copyMatrix(boardState);
 
                 changePieces(boardPiecesButtonsP);
                 // solverHelper.setGameBoard(board)
@@ -788,6 +814,19 @@ public class SwingInitial {
 
     }
 
+    public void printListOfArrays(List<int[]> list) {
+        for (int[] array : list) {
+            System.out.print("[");
+            for (int i = 0; i < array.length; i++) {
+                System.out.print(array[i]);
+                if (i < array.length - 1) {
+                    System.out.print(", ");
+                }
+            }
+            System.out.println("]");
+        }
+    }
+
     private void handleBoardPieceButtonClickonPlayMode(JButton boardPiece) {
         board = getBoard(boardPiecesButtonsP);
         List<int[]> posibleMovesBegin = new ArrayList<>();
@@ -797,38 +836,60 @@ public class SwingInitial {
             // solverHelper.setGameBoard(board);
 
             int[] cord = getButtonClickedCoordinates(boardPiece);
-            System.out.println("Coordenadas boton pulsado: " + cord[0] + " " + cord[1]);
+            // System.out.println("Coordenadas boton pulsado: " + cord[0] + " " + cord[1]);
             // solverHelper = new SolverHelper(board);
             solverHelper.checkMoves(board, posibleMovesBegin);
+            // solverHelper.play();
 
-            int[] correctCoord = checkCoordsOnPosibleMoves(cord, board, posibleMovesBegin);
+            printListOfArrays(posibleMovesBegin);
 
-            if (correctCoord == null) {
-                JOptionPane.showMessageDialog(null, "No se puede eliminar porque no es grupo");
-                return;
-            }
+            // int[] correctCoord = checkCoordsOnPosibleMoves(cord, board,
+            // posibleMovesBegin);
 
-            if (correctCoord[0] == -1) {
-                JOptionPane.showMessageDialog(null, "No se puede eliminar porque es una ficha vacia");
-                return;
-            }
+            // if (correctCoord == null) {
+            // JOptionPane.showMessageDialog(null, "No se puede eliminar porque no es
+            // grupo");
+            // return;
+            // }
 
-            int coordX = correctCoord[0];
-            int coordY = correctCoord[1];
+            // if (correctCoord[0] == -1) {
+            // JOptionPane.showMessageDialog(null, "No se puede eliminar porque es una ficha
+            // vacia");
+            // return;
+            // }
+
+            // int coordX = correctCoord[0];
+            // int coordY = correctCoord[1];
+            // System.out.println("Coordenadas correctas: " + coordX + " " + coordY);
+            int coordX = cord[0];
+            int coordY = cord[1];
 
             if (board[coordX][coordY] == '-') {
                 JOptionPane.showMessageDialog(null, "No se puede eliminar porque es una pieza vacia");
                 return;
             }
-            undoManagerP.add(copyMatrix(board));
+
+            if (!solverHelper.isGroupByPos(coordX, coordY, board, board[coordX][coordY])) {
+                JOptionPane.showMessageDialog(null, "No se puede eliminar porque no es un grupo");
+                return;
+            }
+
+            Map<String, Object> currentState = new HashMap<>();
+            currentState.put("boardState", copyMatrix(board));
+            currentState.put("totalPoints", this.totalPoints);
+            currentState.put("totalPiecesDeleted", this.totalPiecesDeleted);
+
+            undoManagerP.add(currentState);
 
             redoManagerP.clear();
 
             // solverHelper.printMatrxz();
             char color = board[coordX][coordY];
+            // solverHelper.setBoard(board);
             int piezasdeleted = solverHelper.removeGroup(board, coordX, coordY);
             int puntos = solverHelper.getPointWithDeletedPieces(board, piezasdeleted);
 
+            // solverHelper.getPiecesDown(board);
             actualMoves.add(List.of(coordX, coordY, piezasdeleted, puntos, (int) color));
             // System.out.println(actualMoves);
             totalPiecesDeleted += piezasdeleted;
@@ -836,9 +897,17 @@ public class SwingInitial {
 
             // System.out.println("Puntos y piezas eliminadas: " + puntos + " " +
             // piezasdeleted);
+            // System.out.println("Matriz devuelta");
+            // printMatrix(board);
+            // System.out.println("ssf");
+            // printMatrix(solverHelper.getBoardResult());
 
             board = solverHelper.getBoardResult();
-
+            // moverFilas(board);
+            // moverColumnas(board);
+            getPiecesDown(board);
+            movePiecesCol(board);
+            // System.out.println("Matriz despues de mover");
             // printMatrix(board);
 
             changePieces(boardPiecesButtonsP);
@@ -941,11 +1010,6 @@ public class SwingInitial {
             } else {
                 List<int[]> posibleMoves = new ArrayList<>();
                 solverHelper.checkMoves(board, posibleMoves);
-                // for (int i = 0; i < posibleMoves.size(); i++) {
-                // int[] move = posibleMoves.get(i);
-                // // System.out.println("Movimiento #" + (i + 1) + ": (" + move[0] + ", " +
-                // // move[1] + ")");
-                // }
 
                 if (posibleMoves.isEmpty()) {
                     JOptionPane.showMessageDialog(null, "No hay movimientos posibles");
@@ -985,26 +1049,88 @@ public class SwingInitial {
 
     }
 
-    private int[] checkCoordsOnPosibleMoves(int[] cord, char[][] board2Comprobe, List<int[]> posibleMovesBegin) {
-        char target = board2Comprobe[cord[0]][cord[1]];
-        if (target == '-') {
-            return new int[] { -1, -1 };
-        }
-
-        if (solverHelper.isGroupByPos(cord[0], cord[1], board2Comprobe, target)) {
-            for (int i = 0; i < posibleMovesBegin.size(); i++) {
-                int[] move = posibleMovesBegin.get(i);
-                int moveX = move[0];
-                int moveY = move[1];
-
-                if (board[moveX][moveY] == target) {
-                    return new int[] { moveX, moveY };
+    protected void getPiecesDown(char[][] boardGameP) {
+        for (int row = 0; row < boardGameP.length - 1; row++) {
+            for (int col = 0; col < boardGameP[0].length; col++) {
+                if (boardGameP[row + 1][col] == '-' && boardGameP[row][col] != '-') {
+                    boardGameP[row + 1][col] = boardGameP[row][col];
+                    boardGameP[row][col] = '-';
+                    getPiecesDown(boardGameP);
                 }
+
             }
         }
 
-        return null;
+    }
 
+    // public void moverFilas(char[][] tablero) {
+    // for (int i = 0; i < tablero.length - 1; i++) {
+    // for (int j = 0; j < tablero[0].length; j++) {
+    // if (tablero[i + 1][j] == '-' && tablero[i][j] != '-') {
+    // tablero[i + 1][j] = tablero[i][j];
+    // tablero[i][j] = '-';
+    // moverFilas(tablero);
+    // }
+    // }
+    // }
+    // }
+
+    protected void movePiecesCol(char[][] boardGameP) {
+        for (int row = 0; row < boardGameP[0].length; row++) {
+            int numEmptyPieces = 0;
+            for (int col = 0; col < boardGameP.length; col++) {
+                if (boardGameP[col][row] == '-') {
+                    numEmptyPieces++;
+                }
+            }
+            if (numEmptyPieces == boardGameP.length) {
+                changeCols(boardGameP, row);
+            }
+        }
+
+    }
+
+    // public void moverColumnas(char[][] tablero) {
+    // for (int j = 0; j < tablero[0].length; j++) {
+    // int numEspacios = 0;
+    // for (int i = 0; i < tablero.length; i++) {
+    // if (tablero[i][j] == '-') {
+    // numEspacios++;
+    // }
+    // }
+    // if (numEspacios == tablero.length) {
+    // cambiarColumnas(tablero, j);
+
+    // }
+    // }
+    // }
+
+    // protected void changeCols(char[][] boardGameP, int numEmptyPieces) {
+    // for (int colLast = numEmptyPieces; colLast < boardGameP[0].length - 1;
+    // colLast++) {
+    // for (int colFirst = 0; colFirst < boardGameP.length - 1; colFirst++) {
+    // boardGameP[colFirst][colLast] = boardGameP[colFirst][colLast + 1];
+    // boardGameP[colFirst][colLast + 1] = '-';
+    // }
+    // }
+    // }
+
+    public void changeCols(char[][] boardGameP, int row) {
+        for (int j = row + 1; j < boardGameP[0].length; j++) {
+            int numEspacios = 0;
+            for (int i = 0; i < boardGameP.length; i++) {
+                if (boardGameP[i][j] == '-') {
+                    numEspacios++;
+                }
+            }
+            if (numEspacios != boardGameP.length) {
+                for (int i = 0; i < boardGameP.length; i++) {
+                    boardGameP[i][row] = boardGameP[i][j];
+                    boardGameP[i][j] = '-';
+                }
+                break;
+            }
+        }
     }
 
     private void disableBoardPlayMode() {

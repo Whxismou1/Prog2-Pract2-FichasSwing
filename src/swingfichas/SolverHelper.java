@@ -28,6 +28,7 @@ public class SolverHelper {
         this.bestSolutions = new ArrayList<>();
         this.resultList = new ArrayList<>();
         this.resultListSolver = new ArrayList<>();
+
     }
 
     // SolverHelper() {
@@ -63,8 +64,10 @@ public class SolverHelper {
 
         String result = printActualGameSolution(actualGame, gameBoard);
         String resultSolver = printActualGameSolutionForSolver(actualGame, gameBoard);
+
         resultList.add(result);
         resultListSolver.add(resultSolver);
+        // resultListPosiblesMoves.add(coords);
         gameBoardResult = matrixCopy(gameBoard);
 
         gameBoard = null;
@@ -324,20 +327,53 @@ public class SolverHelper {
 
         visited[row][col] = true;
 
-        int numPiecesRem = removeGroupRec(boardGameP, row - 1, col, color, visited); // Check Up
-        numPiecesRem += removeGroupRec(boardGameP, row + 1, col, color, visited); // Check DOnw
-        numPiecesRem += removeGroupRec(boardGameP, row, col - 1, color, visited); // Check Left
-        numPiecesRem += removeGroupRec(boardGameP, row, col + 1, color, visited); // CheckRigth
+        int numPiecesRem = 0;
+
+        // Check Up
+        if (row > 0 && boardGameP[row - 1][col] == color && !visited[row - 1][col]) {
+            numPiecesRem += removeGroupRec(boardGameP, row - 1, col, color, visited);
+        }
+        // Check DOnw
+        if (row < boardGameP.length - 1 && boardGameP[row + 1][col] == color && !visited[row + 1][col]) {
+            numPiecesRem += removeGroupRec(boardGameP, row + 1, col, color, visited);
+        }
+
+        // Check Left
+        if (col > 0 && boardGameP[row][col - 1] == color && !visited[row][col - 1]) {
+
+            numPiecesRem += removeGroupRec(boardGameP, row, col - 1, color, visited);
+
+        }
+
+        // CheckRigth
+        if (col < boardGameP[0].length - 1 && boardGameP[row][col + 1] == color && !visited[row][col + 1]) {
+
+            numPiecesRem += removeGroupRec(boardGameP, row, col + 1, color, visited);
+        }
 
         boardGameP[row][col] = '-';
-        getPiecesDown(boardGameP);
-        movePiecesCol(boardGameP);
+        // getPiecesDown(boardGameP);
+
+        // movePiecesCol(boardGameP);
 
         return numPiecesRem + 1;
 
+        // // System.out.println("Matrzi movida");
+        // // for (int i = 0; i < boardGameP.length; i++) {
+        // // for (int j = 0; j < boardGameP[0].length; j++) {
+        // // System.out.println(boardGameP[i][j]);
+        // // }
+        // // System.out.println();
+        // // }
+        // boardGameP[row][col] = '-';
+        // getPiecesDown(boardGameP);
+        // movePiecesCol(boardGameP);
+
+        // // gameBoardResult = matrixCopy(boardGameP);
+        // return cont + 1;
     }
 
-    protected void getPiecesDown(char[][] boardGameP) {
+    protected char[][] getPiecesDown(char[][] boardGameP) {
         for (int row = 0; row < getTotalRows(boardGameP) - 1; row++) {
             for (int col = 0; col < getTotalCols(boardGameP); col++) {
                 if (boardGameP[row + 1][col] == '-' && boardGameP[row][col] != '-') {
@@ -349,9 +385,13 @@ public class SolverHelper {
             }
         }
 
+        return boardGameP;
+
     }
 
-    protected void movePiecesCol(char[][] boardGameP) {
+
+
+    protected char[][] movePiecesCol(char[][] boardGameP) {
         for (int row = 0; row < getTotalCols(boardGameP); row++) {
             int numEmptyPieces = 0;
             for (int col = 0; col < getTotalRows(boardGameP); col++) {
@@ -364,6 +404,7 @@ public class SolverHelper {
             }
         }
 
+        return boardGameP;
     }
 
     protected void changeCols(char[][] boardGameP, int numEmptyPieces) {
