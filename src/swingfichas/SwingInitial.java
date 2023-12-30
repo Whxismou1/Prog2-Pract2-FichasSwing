@@ -29,8 +29,8 @@ import javax.swing.SwingWorker;
 
 public class SwingInitial {
 
-    private List<List<char[][]>> undoManagerC;
-    private List<List<char[][]>> redoManagerC;
+    // private List<char[][]> undoManagerC;
+    // private List<char[][]> redoManagerC;
 
     private List<Map<String, Object>> undoManagerP;
     private List<Map<String, Object>> redoManagerP;
@@ -66,8 +66,8 @@ public class SwingInitial {
     private JSpinner colSelector;
     private JButton saveFileC;
     private JButton playButtonC;
-    private JButton undoButtonC;
-    private JButton redoButtonC;
+    // private JButton undoButtonC;
+    // private JButton redoButtonC;
     private JButton importGameC;
     private char[][] board;
     private List<List<Integer>> actualMoves;
@@ -94,8 +94,8 @@ public class SwingInitial {
         totalPiecesDeleted = 0;
         actualMoves = new ArrayList<>();
 
-        undoManagerC = new ArrayList<>();
-        redoManagerC = new ArrayList<>();
+        // undoManagerC = new ArrayList<>();
+        // redoManagerC = new ArrayList<>();
 
         undoManagerP = new ArrayList<>();
         redoManagerP = new ArrayList<>();
@@ -158,8 +158,8 @@ public class SwingInitial {
 
         saveFileC = new JButton("Save Board");
         playButtonC = new JButton("Play Game");
-        undoButtonC = new JButton("<-");
-        redoButtonC = new JButton("->");
+        // undoButtonC = new JButton("<-");
+        // redoButtonC = new JButton("->");
         importGameC = new JButton("Import Board");
         board = new char[this.numFilas][this.numColumnas];
     }
@@ -202,6 +202,7 @@ public class SwingInitial {
             actualMoves.clear();
             deactivateButton(createGameButton);
             createGameFrameMode();
+
         });
 
         playGameButton.addActionListener(e -> {
@@ -245,7 +246,7 @@ public class SwingInitial {
 
             if (isValid(importedBoard)) {
 
-                activateButton(undoButtonC);
+                // activateButton(undoButtonC);
                 int nf = importedBoard.length;
                 int nc = importedBoard[0].length;
 
@@ -277,6 +278,52 @@ public class SwingInitial {
 
                 changePieces(boardPiecesButtonsP);
                 // undoManagerP.add(board);
+                // undoManagerC.clear();
+                // redoManagerC.clear();
+                List<int[]> posiblesMoves = new ArrayList<>();
+                solverHelper.checkMoves(auxboard, posiblesMoves);
+
+                if (posiblesMoves.isEmpty()) {
+                    disableBoardPlayMode();
+
+                    int option = JOptionPane.showOptionDialog(
+                            null,
+                            "¡El tablero no tiene solucion!",
+                            "Game Over",
+                            JOptionPane.YES_NO_CANCEL_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE,
+                            null,
+                            new Object[] { "Jugar otra vez", "Crear nuevo Tablero", "Salir" },
+                            null);
+
+                    if (option == JOptionPane.YES_OPTION) {
+                        enableBoardPlayMode();
+                        setRowsAndCols(DEFAULT_ROWS, DEFAULT_COLS);
+                        this.totalPoints = 0;
+                        this.totalPiecesDeleted = 0;
+                        frameGamePlay.dispose();
+                        panelGamePlay.removeAll();
+
+                        playGameFrameMode();
+                    } else if (option == JOptionPane.NO_OPTION) {
+                        setRowsAndCols(DEFAULT_ROWS, DEFAULT_COLS);
+                        this.totalPoints = 0;
+                        this.totalPiecesDeleted = 0;
+                        frameGamePlay.dispose();
+                        panelGamePlay.removeAll();
+
+                        createGameButton.doClick();
+
+                    } else {
+
+                        JOptionPane.showMessageDialog(null, "Thanks for playing!");
+                        System.exit(0);
+
+                    }
+                } else {
+
+                }
+
             } else {
                 JOptionPane.showMessageDialog(null, "The board is not valid");
             }
@@ -298,6 +345,7 @@ public class SwingInitial {
                 board = copyMatrix(auxboard);
 
                 changePieces(boardPiecesButtons);
+
             } else {
                 resetRowsAndCols2Default();
                 frameGamePlay.dispose();
@@ -305,6 +353,8 @@ public class SwingInitial {
                 activateButton(playGameButton);
                 createGameFrameMode();
             }
+            undoManagerP.clear();
+            redoManagerP.clear();
 
         });
 
@@ -334,17 +384,22 @@ public class SwingInitial {
 
         });
 
-        undoButtonC.addActionListener(e -> {
-            // char[][] auxBoard = getBoard(boardPiecesButtons);
-            // undoManagerC.add(auxBoard);
-            // board = copyMatrix(auxBoard);
-            // performUndo(undoManagerC, redoManagerC, currentStateIndexC);
-        });
+        // undoButtonC.addActionListener(e -> {
+        // // printMatrix(getBoard(boardPiecesButtons));
+        // if (!undoManagerC.isEmpty()) {
 
-        redoButtonC.addActionListener(e -> {
-            // performRedo(undoManagerC, redoManagerC, currentStateIndexC);
-        });
+        // char[][] lastState = undoManagerC.remove(undoManagerC.size() - 1);
 
+        // redoManagerC.add(getBoard(boardPiecesButtons));
+        // // board = copyMatrix(undoneState);
+
+        // createGamePanel.removeAll();
+
+        // createGameBoard(this.numFilas, this.numColumnas);
+        // board = copyMatrix(lastState);
+        // changePieces(boardPiecesButtons);
+        // }
+        // });
         undoButtonP.addActionListener(e -> {
             // performUndo(undoManagerP, redoManagerP, currentStateIndexP);
             if (!undoManagerP.isEmpty()) {
@@ -373,6 +428,25 @@ public class SwingInitial {
             }
 
         });
+
+        // redoButtonC.addActionListener(e -> {
+        // // printMatrix(getBoard(boardPiecesButtons));
+        // if (!redoManagerC.isEmpty()) {
+
+        // char[][] redoneState = redoManagerC.remove(redoManagerC.size() - 1);
+
+        // undoManagerC.add(getBoard(boardPiecesButtons));
+        // // board = copyMatrix(redoneState);
+
+        // createGamePanel.removeAll();
+        // createGameBoard(this.numFilas, this.numColumnas);
+
+        // board = copyMatrix(redoneState);
+
+        // changePieces(boardPiecesButtons);
+        // // solverHelper.setGameBoard(board)
+        // }
+        // });
 
         redoButtonP.addActionListener(e -> {
             // performRedo(undoManagerP, redoManagerP, currentStateIndexP);
@@ -410,9 +484,10 @@ public class SwingInitial {
 
         showAvMovesP.addActionListener(new ActionListener() {
 
+            // MyProgressDialog progressDialog = new MyProgressDialog(null, "Progreso");
             public void actionPerformed(ActionEvent e) {
-
-                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                deactivateButton(showAvMovesP);
+                SwingWorker<Void, Integer> worker = new SwingWorker<Void, Integer>() {
 
                     @Override
                     protected Void doInBackground() throws Exception {
@@ -424,22 +499,12 @@ public class SwingInitial {
                         // solverHelper.setGameBoard(board);
                         solverHelper.play();
 
-                        // setRowsAndCols(numFilas, numColumnas);
-
-                        // panelGamePlay.removeAll();
-
-                        // createPlayGameBoard(numFilas, numFilas);
-                        // board = solverHelper.getBoardResult();
-
-                        // changePieces(boardPiecesButtonsP);
-
                         return null;
                     }
 
                     @Override
                     protected void done() {
                         try {
-                            // Obtén el resultado del SwingWorker
 
                             // Muestra los movimientos en un JOptionPane
                             List<String> wazza = solverHelper.getResultListSolver();
@@ -449,7 +514,7 @@ public class SwingInitial {
                             }
 
                             JOptionPane.showMessageDialog(null, movesText.toString());
-
+                            activateButton(showAvMovesP);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -460,6 +525,8 @@ public class SwingInitial {
                     worker.execute();
                 } else {
                     JOptionPane.showMessageDialog(null, "ERROR: Tablero vacio");
+                    activateButton(showAvMovesP);
+
                 }
 
             }
@@ -692,6 +759,7 @@ public class SwingInitial {
 
         selectorsPanel.add(undoButtonP);
         selectorsPanel.add(redoButtonP);
+        // selectorsPanel.add(progBar);
         panelGamePlay.add(selectorsPanel, BorderLayout.NORTH);
 
         JPanel boardPanel = new JPanel();
@@ -722,8 +790,8 @@ public class SwingInitial {
                 activateButton(createGameButton); // Vuelve a activar el botón al cerrar
                 createGamePanel.removeAll();
                 resetRowsAndCols2Default();
-                undoManagerC.clear();
-                redoManagerC.clear();
+                // undoManagerC.clear();
+                // redoManagerC.clear();
             }
         });
         createGameBoard(this.numFilas, this.numColumnas);
@@ -746,8 +814,8 @@ public class SwingInitial {
         selectorsPanel.add(colSelector);
         selectorsPanel.add(saveFileC);
         selectorsPanel.add(playButtonC);
-        selectorsPanel.add(undoButtonC);
-        selectorsPanel.add(redoButtonC);
+        // selectorsPanel.add(undoButtonC);
+        // selectorsPanel.add(redoButtonC);
         selectorsPanel.add(importGameC);
         createGamePanel.add(selectorsPanel, BorderLayout.NORTH);
 
@@ -809,23 +877,24 @@ public class SwingInitial {
 
             updatePieceImage(boardPiece, options[choice]);
             boardPiece.setText(options[choice]);
-
+            // undoManagerC.add(getBoard(boardPiecesButtons));
+            // redoManagerC.clear();
         }
 
     }
 
-    public void printListOfArrays(List<int[]> list) {
-        for (int[] array : list) {
-            System.out.print("[");
-            for (int i = 0; i < array.length; i++) {
-                System.out.print(array[i]);
-                if (i < array.length - 1) {
-                    System.out.print(", ");
-                }
-            }
-            System.out.println("]");
-        }
-    }
+    // public void printListOfArrays(List<int[]> list) {
+    // for (int[] array : list) {
+    // System.out.print("[");
+    // for (int i = 0; i < array.length; i++) {
+    // System.out.print(array[i]);
+    // if (i < array.length - 1) {
+    // System.out.print(", ");
+    // }
+    // }
+    // System.out.println("]");
+    // }
+    // }
 
     private void handleBoardPieceButtonClickonPlayMode(JButton boardPiece) {
         board = getBoard(boardPiecesButtonsP);
@@ -841,7 +910,7 @@ public class SwingInitial {
             solverHelper.checkMoves(board, posibleMovesBegin);
             // solverHelper.play();
 
-            printListOfArrays(posibleMovesBegin);
+            // printListOfArrays(posibleMovesBegin);
 
             // int[] correctCoord = checkCoordsOnPosibleMoves(cord, board,
             // posibleMovesBegin);
@@ -1153,7 +1222,7 @@ public class SwingInitial {
         for (int i = 0; i < boardPiecesButtonsP.length; i++) {
             for (int j = 0; j < boardPiecesButtonsP[0].length; j++) {
                 if (boardPiecesButtonsP[i][j] == boardPiece) {
-                    System.out.println("Coordenadas: " + i + " " + j);
+                    // System.out.println("Coordenadas: " + i + " " + j);
                     return new int[] { i, j };
                 }
             }

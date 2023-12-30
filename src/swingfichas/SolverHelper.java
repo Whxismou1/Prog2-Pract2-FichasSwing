@@ -2,6 +2,7 @@ package swingfichas;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 public class SolverHelper {
     int totalGames;
@@ -320,43 +321,32 @@ public class SolverHelper {
     }
 
     protected int removeGroupRec(char[][] boardGameP, int row, int col, char color, boolean[][] visited) {
-        if (row < 0 || row >= boardGameP.length || col < 0 || col >= boardGameP[0].length || visited[row][col]
-                || boardGameP[row][col] != color) {
-            return 0;
-        }
-
-        visited[row][col] = true;
-
         int numPiecesRem = 0;
+        Stack<int[]> stack = new Stack<>();
+        stack.push(new int[] { row, col });
 
-        // Check Up
-        if (row > 0 && boardGameP[row - 1][col] == color && !visited[row - 1][col]) {
-            numPiecesRem += removeGroupRec(boardGameP, row - 1, col, color, visited);
+        while (!stack.isEmpty()) {
+            int[] current = stack.pop();
+            row = current[0];
+            col = current[1];
+
+            if (row < 0 || row >= boardGameP.length || col < 0 || col >= boardGameP[0].length || visited[row][col]
+                    || boardGameP[row][col] != color) {
+                continue;
+            }
+
+            visited[row][col] = true;
+            numPiecesRem++;
+
+            stack.push(new int[] { row - 1, col }); // Check UP
+            stack.push(new int[] { row + 1, col }); // Check Down
+            stack.push(new int[] { row, col - 1 }); // Check Left
+            stack.push(new int[] { row, col + 1 }); // Check Right
+
+            boardGameP[row][col] = '-';
         }
-        // Check DOnw
-        if (row < boardGameP.length - 1 && boardGameP[row + 1][col] == color && !visited[row + 1][col]) {
-            numPiecesRem += removeGroupRec(boardGameP, row + 1, col, color, visited);
-        }
 
-        // Check Left
-        if (col > 0 && boardGameP[row][col - 1] == color && !visited[row][col - 1]) {
-
-            numPiecesRem += removeGroupRec(boardGameP, row, col - 1, color, visited);
-
-        }
-
-        // CheckRigth
-        if (col < boardGameP[0].length - 1 && boardGameP[row][col + 1] == color && !visited[row][col + 1]) {
-
-            numPiecesRem += removeGroupRec(boardGameP, row, col + 1, color, visited);
-        }
-
-        boardGameP[row][col] = '-';
-        // getPiecesDown(boardGameP);
-
-        // movePiecesCol(boardGameP);
-
-        return numPiecesRem + 1;
+        return numPiecesRem;
 
         // // System.out.println("Matrzi movida");
         // // for (int i = 0; i < boardGameP.length; i++) {
@@ -388,8 +378,6 @@ public class SolverHelper {
         return boardGameP;
 
     }
-
-
 
     protected char[][] movePiecesCol(char[][] boardGameP) {
         for (int row = 0; row < getTotalCols(boardGameP); row++) {

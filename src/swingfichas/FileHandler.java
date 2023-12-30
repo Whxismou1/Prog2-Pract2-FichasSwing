@@ -115,8 +115,11 @@ public class FileHandler {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "ERROR: Tablero invalido en importar");
 
+            return null;
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "ERROR: Tablero invalido en importar");
             return null;
         }
     }
