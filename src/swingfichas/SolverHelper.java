@@ -17,7 +17,8 @@ public class SolverHelper {
     private List<int[]> actualSolutions;
     private List<int[]> bestSolutions;
 
-    private List<String> resultList;
+    // Lista creada para obtener los movimientos posibles en funcion del tablero
+    // pasado
     private List<String> resultListSolver;
 
     // Matriz donde se guarda el tablero de chars
@@ -32,35 +33,15 @@ public class SolverHelper {
 
         this.actualSolutions = new ArrayList<>();
         this.bestSolutions = new ArrayList<>();
-        this.resultList = new ArrayList<>();
+
         this.resultListSolver = new ArrayList<>();
 
     }
-
-    // SolverHelper() {
-    // this.actualSolutions = new ArrayList<>();
-    // this.bestSolutions = new ArrayList<>();
-    // actualGame = 1;
-    // }
-
-    // public void setGameBoard(char[][] actualGameBoard) {
-    // this.gameBoard = new char[actualGameBoard.length][actualGameBoard[0].length];
-    // for (int i = 0; i < actualGameBoard.length; i++) {
-    // for (int j = 0; j < actualGameBoard[0].length; j++) {
-    // this.gameBoard[i][j] = actualGameBoard[i][j];
-    // }
-    // }
-
-    // }
 
     /***
      * Metodo principal del juego
      */
     protected void play() {
-
-        // while (this.actualGame <= this.totalGames) {
-        // Se obtiene el tablero de chars
-        // System.out.println("Lista antes de sacaer:" + boardLists);
 
         // Metodo que calcula las soluciones
         List<int[]> posibleMoves = new ArrayList<>();
@@ -68,12 +49,10 @@ public class SolverHelper {
 
         findSolutions4Board(this.gameBoard, posibleMoves);
 
-        String result = printActualGameSolution(actualGame, gameBoard);
         String resultSolver = printActualGameSolutionForSolver(actualGame, gameBoard);
 
-        resultList.add(result);
         resultListSolver.add(resultSolver);
-        // resultListPosiblesMoves.add(coords);
+
         gameBoardResult = matrixCopy(gameBoard);
 
         gameBoard = null;
@@ -83,70 +62,15 @@ public class SolverHelper {
 
     }
 
-    protected void printMatrxz() {
-        for (int i = 0; i < gameBoard.length; i++) {
-            for (int j = 0; j < gameBoard[0].length; j++) {
-                System.out.print(gameBoard[i][j]);
-            }
-            System.out.println();
-        }
-    }
-
-    protected String printActualGameSolution(int actualGame, char[][] boardGameP) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Juego " + actualGame + ":" + "\n");
-
-        int finalScore = 0;
-        for (int i = 0; i < this.bestSolutions.size(); i++) {
-            int[] arrSolutions = this.bestSolutions.get(i);
-
-            int movesScore = getPointWithDeletedPieces(boardGameP, arrSolutions[2]);
-
-            finalScore += movesScore;
-
-            int row = arrSolutions[0];
-            int col = arrSolutions[1];
-
-            removeGroup(boardGameP, row, col);
-            if (movesScore == 1) {
-                sb.append("Movimiento ").append(i + 1).append(" en (")
-                        .append(getTotalRows(boardGameP) - arrSolutions[0])
-                        .append(", ")
-                        .append(arrSolutions[1] + 1).append("): eliminó ").append(arrSolutions[2])
-                        .append(" fichas de color ")
-                        .append((char) arrSolutions[3]).append(" y obtuvo ").append(movesScore)
-                        .append(" punto.\n");
-            } else {
-                sb.append("Movimiento ").append(i + 1).append(" en (")
-                        .append(getTotalRows(boardGameP) - arrSolutions[0])
-                        .append(", ")
-                        .append(arrSolutions[1] + 1).append("): eliminó ").append(arrSolutions[2])
-                        .append(" fichas de color ")
-                        .append((char) arrSolutions[3]).append(" y obtuvo ").append(movesScore)
-                        .append(" puntos.\n");
-            }
-
-        }
-
-        finalScore += (getLeftPieces(boardGameP) == 0) ? 1000 : 0;
-
-        if (getLeftPieces(boardGameP) == 1) {
-            sb.append("Puntuación final: ").append(finalScore).append(", quedando ")
-                    .append(getLeftPieces(boardGameP))
-                    .append(" ficha.");
-        } else {
-            sb.append("Puntuación final: ").append(finalScore).append(", quedando ")
-                    .append(getLeftPieces(boardGameP))
-                    .append(" fichas.");
-        }
-        // if (!isLastGame) {
-        // sb.append("\n");
-        // }
-        // System.out.println(sb);
-        return sb.toString();
-    }
-
-    protected String printActualGameSolutionForSolver(int actualGame, char[][] boardGameP) {
+    /***
+     * Metodo que nos muestra los mejores movimientos y nos lo imprime en
+     * el formato espcificado
+     * 
+     * @param actualGame -> juego actual
+     * @param boardGameP -> tablero de juego
+     * @return -> String con los movimientos
+     */
+    private String printActualGameSolutionForSolver(int actualGame, char[][] boardGameP) {
         StringBuilder sb = new StringBuilder();
         // sb.append("Movimientos disponibles\n");
 
@@ -176,14 +100,15 @@ public class SolverHelper {
             }
 
         }
-
-        // if (!isLastGame) {
-        // sb.append("\n");
-        // }
-        // System.out.println(sb);
         return sb.toString();
     }
 
+    /**
+     * Metodo que comprueba los mejores movimientos posibles
+     * 
+     * @param boardGameP   -> tablero de juego
+     * @param posibleMoves -> lista de movimientos posibles
+     */
     protected void checkMoves(char[][] boardGameP, List<int[]> posibleMoves) {
         boolean visited[][] = new boolean[getTotalRows(boardGameP)][getTotalCols(boardGameP)];
 
@@ -199,20 +124,10 @@ public class SolverHelper {
 
     }
 
-    protected boolean isGroupByPos(int row, int col, char[][] boardGameP, char actualColor) {
-        return isGroupByPosWithRec(boardGameP, row - 1, col, actualColor) ||
-                isGroupByPosWithRec(boardGameP, row + 1, col, actualColor) ||
-                isGroupByPosWithRec(boardGameP, row, col - 1, actualColor) ||
-                isGroupByPosWithRec(boardGameP, row, col + 1, actualColor);
-    }
-
-    protected static boolean isGroupByPosWithRec(char[][] boardGameP, int row, int col, char actualColor) {
-        return row >= 0 && row < boardGameP.length &&
-                col >= 0 && col < boardGameP[0].length &&
-                boardGameP[row][col] == actualColor;
-    }
-
-    protected void checkMovesWithRec(char[][] boardGameP, int row, int col, char actualPiece,
+    /**
+     * Metodo auxiliar para comrpobar los movimientos
+     */
+    private void checkMovesWithRec(char[][] boardGameP, int row, int col, char actualPiece,
             boolean[][] visited) {
 
         if (row < 0 || row >= getTotalRows(boardGameP) || col < 0 || col >= getTotalCols(boardGameP)
@@ -230,7 +145,40 @@ public class SolverHelper {
 
     }
 
-    protected void findSolutions4Board(char[][] boardGameP, List<int[]> posibleMoves) {
+    /**
+     * Metodo que nos comprueba si la pieza que hay en las posiciones pasadas es
+     * grupo
+     * 
+     * @param row         -> fila de la pieza
+     * @param col         -> columna de la pieza
+     * @param boardGameP  -> tablero de juego
+     * @param actualColor -> color/caracter de la pieza
+     * @return -> true si es grupo, false si no lo es
+     */
+    protected boolean isGroupByPos(int row, int col, char[][] boardGameP, char actualColor) {
+        return isGroupByPosWithRec(boardGameP, row - 1, col, actualColor) ||
+                isGroupByPosWithRec(boardGameP, row + 1, col, actualColor) ||
+                isGroupByPosWithRec(boardGameP, row, col - 1, actualColor) ||
+                isGroupByPosWithRec(boardGameP, row, col + 1, actualColor);
+    }
+
+    /**
+     * Metodo auxiliar que comprueba si la pieza que hay en las posiciones pasadas
+     * es grupo
+     */
+    private static boolean isGroupByPosWithRec(char[][] boardGameP, int row, int col, char actualColor) {
+        return row >= 0 && row < boardGameP.length &&
+                col >= 0 && col < boardGameP[0].length &&
+                boardGameP[row][col] == actualColor;
+    }
+
+    /**
+     * Metodo que calcula las soluciones para el tablero pasado
+     * 
+     * @param boardGameP   -> tablero de juego
+     * @param posibleMoves -> lista de movimientos posibles
+     */
+    private void findSolutions4Board(char[][] boardGameP, List<int[]> posibleMoves) {
 
         char[][] copyBoardGame = matrixCopy(boardGameP);
 
@@ -263,7 +211,12 @@ public class SolverHelper {
 
     }
 
-    protected void checkSolutions(char[][] boardGameP) {
+    /**
+     * Metodo que comrpueba entre las soluciones obteniendo las mejores
+     * 
+     * @param boardGameP -> tablero de juego
+     */
+    private void checkSolutions(char[][] boardGameP) {
         int finalScore = getTotalMoveScore(boardGameP);
 
         if (this.bestScore < finalScore) {
@@ -274,7 +227,13 @@ public class SolverHelper {
 
     }
 
-    protected int getTotalMoveScore(char[][] boardGameP) {
+    /**
+     * Metodo que devuelve el total de puntos de un movimiento
+     * 
+     * @param boardGameP -> tablero de juego
+     * @return -> total de puntos
+     */
+    private int getTotalMoveScore(char[][] boardGameP) {
         int finalMoveScore = 0;
 
         for (int i = 0; i < this.actualSolutions.size(); i++) {
@@ -288,6 +247,13 @@ public class SolverHelper {
         return finalMoveScore;
     }
 
+    /**
+     * Metodo que nos devuelve los puntos en funcion de las piezas eliminadas
+     * 
+     * @param boardGameP    -> tablero de juego
+     * @param deletedPieces -> numero de piezas eliminadas
+     * @return -> puntos
+     */
     protected int getPointWithDeletedPieces(char[][] boardGameP, int deletedPieces) {
         return (deletedPieces - 2) * (deletedPieces - 2);
     }
@@ -325,7 +291,17 @@ public class SolverHelper {
 
     }
 
-    protected int removeGroupRec(char[][] boardGameP, int row, int col, char color, boolean[][] visited) {
+    /**
+     * Metodo auxiliar recursivo que elimina el grupo pasado
+     * 
+     * @param boardGameP -> tablero de juego
+     * @param row        -> fila de la pieza
+     * @param col        -> columna de la pieza
+     * @param color      -> color/caracter de la pieza
+     * @param visited    -> matriz de visitados
+     * @return -> numero de piezas eliminadas
+     */
+    private int removeGroupRec(char[][] boardGameP, int row, int col, char color, boolean[][] visited) {
         int numPiecesRem = 0;
         Stack<int[]> stack = new Stack<>();
         stack.push(new int[] { row, col });
@@ -343,81 +319,45 @@ public class SolverHelper {
             visited[row][col] = true;
             numPiecesRem++;
 
-            stack.push(new int[] { row - 1, col }); // Check UP
-            stack.push(new int[] { row + 1, col }); // Check Down
-            stack.push(new int[] { row, col - 1 }); // Check Left
-            stack.push(new int[] { row, col + 1 }); // Check Right
+            stack.push(new int[] { row - 1, col }); // Comprobar arriba
+            stack.push(new int[] { row + 1, col }); // Comprobar abajo
+            stack.push(new int[] { row, col - 1 }); // Comprobar izquierda
+            stack.push(new int[] { row, col + 1 }); // Comprobar derecha
 
             boardGameP[row][col] = '-';
         }
 
         return numPiecesRem;
 
-        // // System.out.println("Matrzi movida");
-        // // for (int i = 0; i < boardGameP.length; i++) {
-        // // for (int j = 0; j < boardGameP[0].length; j++) {
-        // // System.out.println(boardGameP[i][j]);
-        // // }
-        // // System.out.println();
-        // // }
-        // boardGameP[row][col] = '-';
-        // getPiecesDown(boardGameP);
-        // movePiecesCol(boardGameP);
-
-        // // gameBoardResult = matrixCopy(boardGameP);
-        // return cont + 1;
     }
 
-    protected char[][] getPiecesDown(char[][] boardGameP) {
-        for (int row = 0; row < getTotalRows(boardGameP) - 1; row++) {
-            for (int col = 0; col < getTotalCols(boardGameP); col++) {
-                if (boardGameP[row + 1][col] == '-' && boardGameP[row][col] != '-') {
-                    boardGameP[row + 1][col] = boardGameP[row][col];
-                    boardGameP[row][col] = '-';
-                    getPiecesDown(boardGameP);
-                }
-
-            }
-        }
-
-        return boardGameP;
-
-    }
-
-    protected char[][] movePiecesCol(char[][] boardGameP) {
-        for (int row = 0; row < getTotalCols(boardGameP); row++) {
-            int numEmptyPieces = 0;
-            for (int col = 0; col < getTotalRows(boardGameP); col++) {
-                if (boardGameP[col][row] == '-') {
-                    numEmptyPieces++;
-                }
-            }
-            if (numEmptyPieces == getTotalCols(boardGameP)) {
-                changeCols(boardGameP, numEmptyPieces);
-            }
-        }
-
-        return boardGameP;
-    }
-
-    protected void changeCols(char[][] boardGameP, int numEmptyPieces) {
-        for (int colLast = numEmptyPieces; colLast < getTotalCols(boardGameP) - 1; colLast++) {
-            for (int colFirst = 0; colFirst < getTotalRows(boardGameP) - 1; colFirst++) {
-                boardGameP[colFirst][colLast] = boardGameP[colFirst][colLast + 1];
-                boardGameP[colFirst][colLast + 1] = '-';
-            }
-        }
-    }
-
-    protected int getTotalCols(char[][] matrix) {
+    /**
+     * Metodo que nos devuelve el numero de columnas
+     * 
+     * @param matrix -> matriz
+     * @return -> numero de columnas de la matriz
+     */
+    private int getTotalCols(char[][] matrix) {
         return matrix[0].length;
     }
 
-    protected int getTotalRows(char[][] matrix) {
+    /**
+     * Metodo que nos devuelve el numero de filas
+     * 
+     * @param matrix -> matriz
+     * @return -> numero de filas de la matriz
+     */
+    private int getTotalRows(char[][] matrix) {
         return matrix.length;
     }
 
-    protected char[][] matrixCopy(char[][] originalMatrix) {
+    /**
+     * Metodo que nos devuelve una copia de la matriz pasada
+     * 
+     * @param originalMatrix -> matriz original
+     * @return -> copia de la matriz
+     */
+    private char[][] matrixCopy(char[][] originalMatrix) {
 
         char[][] copiedMatrix = new char[getTotalRows(originalMatrix)][getTotalCols(originalMatrix)];
 
@@ -431,6 +371,11 @@ public class SolverHelper {
 
     }
 
+    /**
+     * Metodo que nos devuelve la matriz resultante despues de hacer los movimientos
+     * 
+     * @return -> matriz resultante
+     */
     protected char[][] getBoardResult() {
         char[][] boardResult = new char[gameBoardResult.length][gameBoardResult[0].length];
 
@@ -443,10 +388,11 @@ public class SolverHelper {
         return boardResult;
     }
 
-    protected List<String> getResultList() {
-        return resultList;
-    }
-
+    /**
+     * Metodo que nos devuelve la lista de movimientos realizados
+     * 
+     * @return -> lista de movimientos
+     */
     protected List<String> getResultListSolver() {
         return resultListSolver;
     }
