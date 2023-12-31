@@ -1,3 +1,8 @@
+
+/**
+ * Clase encargada de la logica de jugar
+ */
+
 package swingfichas;
 
 import java.util.ArrayList;
@@ -5,7 +10,7 @@ import java.util.List;
 import java.util.Stack;
 
 public class SolverHelper {
-    int totalGames;
+
     // Juego actual
     int actualGame;
     private int bestScore;

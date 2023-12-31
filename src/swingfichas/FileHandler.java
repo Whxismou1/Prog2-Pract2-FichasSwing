@@ -1,5 +1,5 @@
 /***
- * Clase encargada de guardar y importar los tableros
+ * Clase encargada de exportar e importar los tableros
  */
 
 package swingfichas;
@@ -25,20 +25,20 @@ public class FileHandler {
     }
 
     /**
-     * Metodo encargado de guardar el tablero en un archivo
+     * Metodo encargado de exportar el tablero en un archivo
      * 
      * @param currentBoard -> tablero actual
      */
     protected void saveToFile(char[][] currentBoard) {
-        int userSelection = fileChooser.showSaveDialog(null);
+        int userOption = fileChooser.showSaveDialog(null);
 
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            try (PrintWriter writer = new PrintWriter(new FileWriter(fileChooser.getSelectedFile()))) {
+        if (userOption == JFileChooser.APPROVE_OPTION) {
+            try (PrintWriter wrt = new PrintWriter(new FileWriter(fileChooser.getSelectedFile()))) {
                 for (int i = 0; i < currentBoard.length; i++) {
                     for (int j = 0; j < currentBoard[0].length; j++) {
-                        writer.print(currentBoard[i][j]);
+                        wrt.print(currentBoard[i][j]);
                     }
-                    writer.println();
+                    wrt.println();
                 }
                 JOptionPane.showMessageDialog(null, "Board saved to " + fileChooser.getSelectedFile());
             } catch (IOException e) {
@@ -57,9 +57,9 @@ public class FileHandler {
         fileChooser.setDialogTitle("Load game");
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-        int userChoice = fileChooser.showOpenDialog(null);
+        int userOption = fileChooser.showOpenDialog(null);
 
-        if (userChoice == JFileChooser.APPROVE_OPTION) {
+        if (userOption == JFileChooser.APPROVE_OPTION) {
             File fileSelected = fileChooser.getSelectedFile();
             return getBoardFromFile(fileSelected);
         } else {
@@ -69,21 +69,21 @@ public class FileHandler {
     }
 
     /**
-     * Metodo encargado de leer el archivo y cargar el tablero
+     * Metodo auxiliar encargado de leer el archivo y cargar el tablero
      * 
      * @param fileSelected -> archivo seleccionado
-     * @return -> tablero cargado
+     * @return -> tablero cargado o null si no es valido
      */
     private char[][] getBoardFromFile(File fileSelected) {
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(fileSelected));
+            BufferedReader rd = new BufferedReader(new FileReader(fileSelected));
 
             // Contar las filas y columnas del tablero
             int numRows = 0;
             int numCols = 0;
 
             String line;
-            while ((line = reader.readLine()) != null) {
+            while ((line = rd.readLine()) != null) {
                 numRows++;
                 // Suponemos que todas las filas tienen la misma longitud
                 if (numCols == 0) {
@@ -92,45 +92,50 @@ public class FileHandler {
             }
 
             // Volver a leer el archivo para cargar el tablero
-            char[][] loadedBoard = new char[numRows][numCols];
-            reader.close();
-            reader = new BufferedReader(new FileReader(fileSelected));
+            char[][] importedBoard = new char[numRows][numCols];
+            rd.close();
+            rd = new BufferedReader(new FileReader(fileSelected));
 
-            int currentRow = 0;
-            while ((line = reader.readLine()) != null) {
-                char[] rowChars = line.trim().toCharArray();
-                for (int i = 0; i < rowChars.length; i++) {
-                    loadedBoard[currentRow][i] = rowChars[i];
+            int row = 0;
+            while ((line = rd.readLine()) != null) {
+                char[] rowLine = line.trim().toCharArray();
+                for (int i = 0; i < rowLine.length; i++) {
+                    importedBoard[row][i] = rowLine[i];
                 }
-                currentRow++;
+                row++;
             }
 
-            if (isValid(loadedBoard)) {
-                return loadedBoard;
+            if (isValid(importedBoard)) {
+                return importedBoard;
             } else {
-                // Manejar el error según tus necesidades (por ejemplo, mostrar un mensaje de
-                // error)
-                JOptionPane.showMessageDialog(null, "ERROR: Tablero invalido en importar");
+
+                JOptionPane.showMessageDialog(null, "ERROR: Invalid board in import");
                 return null;
             }
 
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "ERROR: Tablero invalido en importar");
+            JOptionPane.showMessageDialog(null, "ERROR: Invalid board in import");
 
             return null;
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "ERROR: Tablero invalido en importar");
+            JOptionPane.showMessageDialog(null, "ERROR: Invalid board in import");
             return null;
         }
     }
 
-    private boolean isValid(char[][] loadedBoard) {
-        if (loadedBoard == null) {
+    /**
+     * Metodo auxiliar encargado de validar el tablero importado
+     * 
+     * @param importedBoard -> tablero importado a comprobar
+     * @return -> true si es valido, false en caso contrario
+     */
+    private boolean isValid(char[][] importedBoard) {
+        if (importedBoard == null) {
             return false;
         }
 
-        int numRows = loadedBoard.length;
-        int numCols = (numRows > 0) ? loadedBoard[0].length : 0;
+        int numRows = importedBoard.length;
+        int numCols = (numRows > 0) ? importedBoard[0].length : 0;
 
         // Comprobar que el número de filas esté en el rango [1, 20]
         if (numRows < 1 || numRows > 20) {
@@ -143,7 +148,7 @@ public class FileHandler {
 
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numCols; j++) {
-                char actualChar = loadedBoard[i][j];
+                char actualChar = importedBoard[i][j];
                 if (actualChar != 'R' && actualChar != 'V' && actualChar != 'A') {
                     return false;
                 }
@@ -153,13 +158,13 @@ public class FileHandler {
         return true;
     }
 
-    protected void saveGameSolution(List<String> wazza) {
-        int userSelection = fileChooser.showSaveDialog(null);
+    protected void saveGameSolution(List<String> movesMaked) {
+        int userOption = fileChooser.showSaveDialog(null);
 
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            try (PrintWriter writer = new PrintWriter(new FileWriter(fileChooser.getSelectedFile()))) {
-                for (String move : wazza) {
-                    writer.println(move);
+        if (userOption == JFileChooser.APPROVE_OPTION) {
+            try (PrintWriter wrt = new PrintWriter(new FileWriter(fileChooser.getSelectedFile()))) {
+                for (String move : movesMaked) {
+                    wrt.println(move);
                 }
                 JOptionPane.showMessageDialog(null, "Game solution saved to " + fileChooser.getSelectedFile());
             } catch (IOException e) {
@@ -172,12 +177,12 @@ public class FileHandler {
     }
 
     protected void saveMyGameSolution(List<List<Integer>> actualMoves, int totalPuntos, int leftPieces) {
-        int userSelection = fileChooser.showSaveDialog(null);
+        int userOption = fileChooser.showSaveDialog(null);
 
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            try (PrintWriter writer = new PrintWriter(new FileWriter(fileChooser.getSelectedFile()))) {
+        if (userOption == JFileChooser.APPROVE_OPTION) {
+            try (PrintWriter wrt = new PrintWriter(new FileWriter(fileChooser.getSelectedFile()))) {
 
-                writer.println("Juego 1:");
+                wrt.println("Juego 1:");
 
                 for (int i = 0; i < actualMoves.size(); i++) {
                     List<Integer> move = actualMoves.get(i);
@@ -187,12 +192,12 @@ public class FileHandler {
                     int points = move.get(3);
                     char color = (char) (int) move.get(4);
 
-                    writer.println("Movimiento " + (i + 1) + " en (" + row + ", " + col + "): eliminó " +
+                    wrt.println("Movimiento " + (i + 1) + " en (" + row + ", " + col + "): eliminó " +
                             piecesDeleted + " fichas de color " + color + " y obtuvo " +
                             points + " punto" + (points > 1 ? "s" : "") + ".");
                 }
 
-                writer.println("Puntuación final: " + totalPuntos + ", quedando " +
+                wrt.println("Puntuación final: " + totalPuntos + ", quedando " +
                         leftPieces + " fichas.");
 
                 JOptionPane.showMessageDialog(null, "Game solution saved to " + fileChooser.getSelectedFile());

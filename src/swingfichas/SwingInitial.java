@@ -75,19 +75,27 @@ public class SwingInitial {
     /* Elementos del menu Jugar */
     private JFrame frameGamePlay;
     private JPanel panelGamePlay;
-
     private JButton importGameP;
     private JButton createGameP;
     private JButton showAvMovesP;
-
     private JButton undoButtonP;
     private JButton redoButtonP;
     private JButton[][] boardPiecesButtonsP;
-
     private int totalPoints;
     private int totalPiecesDeleted;
 
     public SwingInitial() {
+
+        inicializeUtilities();
+        inicializeClasses();
+        inicializeComponents();
+        addButtonsMainMenu2Arr();
+        addComponents2MainFrame();
+        addActionsLIstenerComponents();
+
+    }
+
+    private void inicializeUtilities() {
         this.numFilas = DEFAULT_ROWS;
         this.numColumnas = DEFAULT_COLS;
         totalPoints = 0;
@@ -99,13 +107,6 @@ public class SwingInitial {
 
         undoManagerP = new ArrayList<>();
         redoManagerP = new ArrayList<>();
-
-        inicializeClasses();
-        inicializeComponents();
-        addButtonsMainMenu2Arr();
-        addComponents2MainFrame();
-        addActionsLIstenerComponents();
-
     }
 
     private void inicializeClasses() {
