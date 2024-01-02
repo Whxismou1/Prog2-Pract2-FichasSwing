@@ -26,6 +26,9 @@ import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
@@ -67,10 +70,14 @@ public class SwingInitial {
     private JButton importGameC;
     private char[][] board;
     private List<List<Integer>> actualMoves;
+
     // private JButton undoButtonC;
     // private JButton redoButtonC;
-    // private List<char[][]> undoManagerC;
-    // private List<char[][]> redoManagerC;
+    private JMenu menuURC;
+    private JMenuItem undoItemC;
+    private JMenuItem redoItemC;
+    private List<char[][]> undoManagerC;
+    private List<char[][]> redoManagerC;
 
     /* Elementos del menu Jugar */
     private JFrame frameGamePlay;
@@ -78,8 +85,14 @@ public class SwingInitial {
     private JButton importGameP;
     private JButton createGameP;
     private JButton showAvMovesP;
-    private JButton undoButtonP;
-    private JButton redoButtonP;
+
+    private JMenu menuURP;
+    private JMenuItem undoItemP;
+    private JMenuItem redoItemP;
+
+    // private JButton undoButtonP;
+    // private JButton redoButtonP;
+
     private JButton[][] boardPiecesButtonsP;
     private int totalPoints;
     private int totalPiecesDeleted;
@@ -106,8 +119,8 @@ public class SwingInitial {
         totalPiecesDeleted = 0;
         actualMoves = new ArrayList<>();
 
-        // undoManagerC = new ArrayList<>();
-        // redoManagerC = new ArrayList<>();
+        undoManagerC = new ArrayList<>();
+        redoManagerC = new ArrayList<>();
 
         undoManagerP = new ArrayList<>();
         redoManagerP = new ArrayList<>();
@@ -168,8 +181,15 @@ public class SwingInitial {
 
         saveFileC = new JButton("Save Board");
         playButtonC = new JButton("Play Game");
+
         // undoButtonC = new JButton("<-");
         // redoButtonC = new JButton("->");
+        undoItemC = new JMenuItem("Undo <-");
+        redoItemC = new JMenuItem("Redo ->");
+        menuURC = new JMenu("Editar");
+        menuURC.add(undoItemC);
+        menuURC.add(redoItemC);
+
         importGameC = new JButton("Import Board");
         board = new char[this.numFilas][this.numColumnas];
     }
@@ -183,8 +203,15 @@ public class SwingInitial {
         createGameP = new JButton("Create Board");
         showAvMovesP = new JButton("Hints");
 
-        undoButtonP = new JButton("<-");
-        redoButtonP = new JButton("->");
+        menuURP = new JMenu("Editar");
+        undoItemP = new JMenuItem("Undo <-");
+        redoItemP = new JMenuItem("Redo ->");
+
+        menuURP.add(undoItemP);
+        menuURP.add(redoItemP);
+        // undoButtonP = new JButton("<-");
+        // redoButtonP = new JButton("->");
+
         board = new char[this.numFilas][this.numColumnas];
     }
 
@@ -212,7 +239,7 @@ public class SwingInitial {
      * Metodo encargado de meter el panel al frame principal
      */
     private void addComponents2MainFrame() {
-        mainFrame.add(mainPanel);
+        mainFrame.getContentPane().add(mainPanel);
     }
 
     /**
@@ -338,7 +365,8 @@ public class SwingInitial {
                 activateButton(playGameButton);
                 deactivateButton(createGameButton);
                 createGameFrameMode();
-
+                rowSelector.setValue(auxboard.length);
+                colSelector.setValue(auxboard[0].length);
                 board = copyMatrix(auxboard);
 
                 changePieces(boardPiecesButtons);
@@ -348,6 +376,8 @@ public class SwingInitial {
                 frameGamePlay.dispose();
                 panelGamePlay.removeAll();
                 activateButton(playGameButton);
+                rowSelector.setValue(DEFAULT_ROWS);
+                colSelector.setValue(DEFAULT_COLS);
                 createGameFrameMode();
             }
             undoManagerP.clear();
@@ -381,7 +411,7 @@ public class SwingInitial {
         });
 
         // Accion para el boton undo del menu jugar juego
-        undoButtonP.addActionListener(e -> {
+        undoItemP.addActionListener(e -> {
 
             if (!undoManagerP.isEmpty()) {
                 int cuurentPoints = this.totalPoints;
@@ -409,27 +439,42 @@ public class SwingInitial {
 
         });
 
-        // redoButtonC.addActionListener(e -> {
-        // // printMatrix(getBoard(boardPiecesButtons));
-        // if (!redoManagerC.isEmpty()) {
+        undoItemC.addActionListener(e -> {
+            if (!undoManagerC.isEmpty()) {
+                char[][] lastStatus = undoManagerC.remove(undoManagerC.size() - 1);
 
-        // char[][] redoneState = redoManagerC.remove(redoManagerC.size() - 1);
+                redoManagerC.add(getBoard(boardPiecesButtons));
 
-        // undoManagerC.add(getBoard(boardPiecesButtons));
-        // // board = copyMatrix(redoneState);
+                createGamePanel.removeAll();
+                createGameBoard(this.numFilas, this.numColumnas);
 
-        // createGamePanel.removeAll();
-        // createGameBoard(this.numFilas, this.numColumnas);
+                board = copyMatrix(lastStatus);
 
-        // board = copyMatrix(redoneState);
+                changePieces(boardPiecesButtons);
+            }
+        });
 
-        // changePieces(boardPiecesButtons);
-        // // solverHelper.setGameBoard(board)
-        // }
-        // });
+        redoItemC.addActionListener(e -> {
+            // printMatrix(getBoard(boardPiecesButtons));
+            if (!redoManagerC.isEmpty()) {
+
+                char[][] redoneState = redoManagerC.remove(redoManagerC.size() - 1);
+
+                undoManagerC.add(getBoard(boardPiecesButtons));
+                // board = copyMatrix(redoneState);
+
+                createGamePanel.removeAll();
+                createGameBoard(this.numFilas, this.numColumnas);
+
+                board = copyMatrix(redoneState);
+
+                changePieces(boardPiecesButtons);
+
+            }
+        });
 
         // Accion para el boton redo del menu jugar juego
-        redoButtonP.addActionListener(e -> {
+        redoItemP.addActionListener(e -> {
             if (!redoManagerP.isEmpty()) {
                 int currentPoints = this.totalPoints;
                 int currentPiecesDeleted = this.totalPiecesDeleted;
@@ -655,8 +700,6 @@ public class SwingInitial {
         int numRows = (int) rowSelector.getValue();
         int numCols = (int) colSelector.getValue();
 
-        // Limpiar el contenido actual del panel de juego
-
         createGamePanel.removeAll();
 
         createGameBoard(numRows, numCols);
@@ -711,14 +754,14 @@ public class SwingInitial {
 
         panelGamePlay.setLayout(new BorderLayout());
 
+        // Agregar selectores de fila y columna
         JPanel selectorsPanel = new JPanel();
 
         selectorsPanel.add(importGameP);
         selectorsPanel.add(createGameP);
         selectorsPanel.add(showAvMovesP);
-
-        selectorsPanel.add(undoButtonP);
-        selectorsPanel.add(redoButtonP);
+        // selectorsPanel.add(undoButtonP);
+        // selectorsPanel.add(redoButtonP);
         // selectorsPanel.add(progBar);
         panelGamePlay.add(selectorsPanel, BorderLayout.NORTH);
 
@@ -733,8 +776,11 @@ public class SwingInitial {
             }
         }
 
+        JMenuBar menuBarP = new JMenuBar();
+        menuBarP.add(menuURP);
         panelGamePlay.add(boardPanel, BorderLayout.CENTER);
-        frameGamePlay.add(panelGamePlay);
+        frameGamePlay.setJMenuBar(menuBarP);
+        frameGamePlay.getContentPane().add(panelGamePlay);
     }
 
     /**
@@ -754,8 +800,8 @@ public class SwingInitial {
                 activateButton(createGameButton);
                 createGamePanel.removeAll();
                 resetRowsAndCols2Default();
-                // undoManagerC.clear();
-                // redoManagerC.clear();
+                undoManagerC.clear();
+                redoManagerC.clear();
             }
         });
         createGameBoard(this.numFilas, this.numColumnas);
@@ -799,8 +845,12 @@ public class SwingInitial {
             }
         }
 
+        JMenuBar menuBarC = new JMenuBar();
+        menuBarC.add(menuURC);
+
         createGamePanel.add(boardPanel, BorderLayout.CENTER);
-        createGameFrame.add(createGamePanel);
+        createGameFrame.setJMenuBar(menuBarC);
+        createGameFrame.getContentPane().add(createGamePanel);
 
     }
 
@@ -849,11 +899,10 @@ public class SwingInitial {
                 options[0]);
 
         if (choice != -1) {
-
+            undoManagerC.add(getBoard(boardPiecesButtons));
+            redoManagerC.clear();
             updatePieceImage(boardPiece, options[choice]);
             boardPiece.setText(options[choice]);
-            // undoManagerC.add(getBoard(boardPiecesButtons));
-            // redoManagerC.clear();
         }
 
     }
@@ -1154,6 +1203,7 @@ public class SwingInitial {
         for (int i = 0; i < boardPiecesButtonsP.length; i++) {
             for (int j = 0; j < boardPiecesButtonsP[0].length; j++) {
                 if (boardPiecesButtonsP[i][j] == boardPiece) {
+                    // System.out.println("Coordenadas: " + i + " " + j);
                     return new int[] { i, j };
                 }
             }
@@ -1282,7 +1332,8 @@ public class SwingInitial {
         char[][] importedBoard = fileHandler.loadGame();
 
         if (isValid(importedBoard)) {
-
+            redoManagerC.clear();
+            undoManagerC.clear();
             int nf = importedBoard.length;
             int nc = importedBoard[0].length;
 
