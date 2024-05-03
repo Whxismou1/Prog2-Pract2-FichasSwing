@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<project name="ATMManager" basedir="." default="todo"
+<project name="FichasSwing" basedir="." default="todo"
     xmlns:jacoco="antlib:org.jacoco.ant">
     <property name="src" value="src"/>
     <property name="lib" value="lib"/>
